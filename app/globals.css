@@ -197,22 +197,6 @@ a {
   will-change: color;
 }
 
-a::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--primary, #db2777), rgba(219, 39, 119, 0));
-  transition: width 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  will-change: width;
-}
-
-a:hover::before {
-  width: 100%;
-}
-
 /* Button hover scale with shadow - optimized */
 button,
 a[role="button"] {
