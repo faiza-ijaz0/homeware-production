@@ -126,7 +126,7 @@ export default function QuotationApproval() {
       setQuotations(draftQuotations)
     } catch (error) {
       console.error('Error fetching quotations:', error)
-      alert('Error loading quotations from Firebase. Please check console for details.')
+      alert('Error loading quotations  Please check console for details.')
     }
   }
 
@@ -648,13 +648,8 @@ export default function QuotationApproval() {
 
       {/* Firebase Info */}
       <div className="bg-gray-50 border border-gray-300 rounded p-4 text-center">
-        <p className="text-xs text-gray-500">
-          Data loaded from Firebase collection: <span className="font-bold">quotations</span>
-        </p>
-        <p className="text-[10px] text-gray-400 mt-1">
-          Status filter: <span className="font-bold text-yellow-600">Draft</span> | 
-          Total records in collection: Loading...
-        </p>
+        
+       
       </div>
     </div>
   )

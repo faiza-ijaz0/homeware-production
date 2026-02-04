@@ -437,30 +437,7 @@ export default function QuotationDashboard() {
       </div>
 
       {/* Firebase Information */}
-      <div className="bg-gray-50 border border-gray-300 rounded p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-gray-700">Firebase Data Source</p>
-            <p className="text-[10px] text-gray-500">
-              Collection: <span className="font-bold">quotations</span> | 
-              Documents: <span className="font-bold">{stats.total}</span> | 
-              Last Updated: Just now
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-[10px] text-gray-600">Connected</span>
-            </div>
-            <button 
-              onClick={fetchQuotations}
-              className="text-[10px] text-blue-600 font-bold hover:text-blue-800"
-            >
-              View Raw Data →
-            </button>
-          </div>
-        </div>
-      </div>
+      
     </div>
   )
 }

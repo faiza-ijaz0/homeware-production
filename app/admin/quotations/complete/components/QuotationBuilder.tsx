@@ -738,14 +738,7 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
            )}
            
            {loadingData && (
-             <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-center">
-               <p className="text-[10px] font-bold text-blue-700">
-                 ⏳ Loading data from Firebase...
-               </p>
-               <p className="text-[9px] text-blue-600 mt-1">
-                 Clients: {clients.length} | Leads: {leads.length} | Services: {services.length}
-               </p>
-             </div>
+             <></>
            )}
         </div>
       </div>

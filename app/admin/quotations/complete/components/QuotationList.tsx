@@ -83,7 +83,7 @@ export default function QuotationList({ onEdit, onView, onSend, refreshTrigger }
       setQuotations(quotationsData)
     } catch (error) {
       console.error('Error fetching quotations:', error)
-      alert('Error loading quotations from Firebase')
+      alert('Error loading quotations ')
     } finally {
       setLoading(false)
     }
@@ -284,7 +284,7 @@ export default function QuotationList({ onEdit, onView, onSend, refreshTrigger }
                   <td colSpan={6} className="px-4 py-8 text-center">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
-                      <p className="text-sm text-gray-500">Loading quotations from Firebase...</p>
+                      <p className="text-sm text-gray-500">Loading quotations</p>
                     </div>
                   </td>
                 </tr>
@@ -395,13 +395,7 @@ export default function QuotationList({ onEdit, onView, onSend, refreshTrigger }
 
       {/* Footer Info */}
       <div className="flex justify-between items-center text-xs text-gray-500">
-        <p>
-          Showing <span className="font-bold">{filtered.length}</span> of{' '}
-          <span className="font-bold">{quotations.length}</span> quotations
-        </p>
-        <p className="text-[10px] uppercase font-bold">
-          Data loaded from Firebase collection "quotations"
-        </p>
+       
       </div>
     </div>
   )
