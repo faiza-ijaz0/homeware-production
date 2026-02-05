@@ -1,3 +1,4 @@
+// app/(public)/book-service/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -20,31 +21,9 @@ import {
   X,
   Check,
   PhoneCall,
-  MessageSquare,
-  Clipboard,
 } from "lucide-react";
-import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  serverTimestamp,
-} from "firebase/firestore";
-
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDU9KZ3r-HtwjcQOxwCFSveprrBk1Mf8lA",
-  authDomain: "homework-a36e3.firebaseapp.com",
-  projectId: "homework-a36e3",
-  storageBucket: "homework-a36e3.firebasestorage.app",
-  messagingSenderId: "476483591829",
-  appId: "1:476483591829:web:336c9ccbb7e23d0049459c",
-  measurementId: "G-NTCTYB9HVY",
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from '@/lib/firebase'; // Import from centralized config
 
 // Save booking to Firebase function
 const saveBookingToFirebase = async (bookingData: any) => {
