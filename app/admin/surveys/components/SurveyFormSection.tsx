@@ -1,7 +1,8 @@
+
 // 'use client'
 
 // import { useState, useEffect } from 'react'
-// import { Plus, Trash2, Save, Eye, Copy, Download, X, ChevronDown, ChevronUp, Hash, Calendar, Star, ThumbsUp, CheckSquare, Radio, Type, MessageSquare } from 'lucide-react'
+// import { Plus, Trash2, Save, Eye, Copy, Download, X, ChevronDown, ChevronUp, Hash, Calendar, Star, ThumbsUp, CheckSquare, Radio, Type, MessageSquare, Share, Edit2 } from 'lucide-react'
 // import { db } from '@/lib/firebase'
 // import { 
 //   collection, 
@@ -12,8 +13,10 @@
 //   doc,
 //   deleteDoc,
 //   updateDoc,
-//   serverTimestamp
+//   serverTimestamp,
+//   getDoc
 // } from 'firebase/firestore'
+// import { useParams } from 'next/navigation'
 
 // interface Question {
 //   id: string
@@ -47,6 +50,7 @@
 // }
 
 // export default function SurveyFormSection() {
+//   const params = useParams()
 //   const [surveys, setSurveys] = useState<Survey[]>([])
 //   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null)
 //   const [sections, setSections] = useState<FormSection[]>([
@@ -61,6 +65,8 @@
 //   const [description, setDescription] = useState('')
 //   const [loading, setLoading] = useState(false)
 //   const [showSavedSurveys, setShowSavedSurveys] = useState(false)
+//   const [shareLink, setShareLink] = useState<string | null>(null)
+//   const [showShareModal, setShowShareModal] = useState(false)
   
 //   // New state for question modal
 //   const [showQuestionModal, setShowQuestionModal] = useState(false)
@@ -73,6 +79,39 @@
 //   })
 //   const [optionInput, setOptionInput] = useState('')
 //   const [optionsList, setOptionsList] = useState<string[]>([])
+
+//   // Fetch specific survey when editing from URL
+//   useEffect(() => {
+//     const fetchSurveyById = async (id: string) => {
+//       try {
+//         const surveyDoc = await getDoc(doc(db, 'surveys', id))
+//         if (surveyDoc.exists()) {
+//           const data = surveyDoc.data()
+//           const survey: Survey = {
+//             id: surveyDoc.id,
+//             title: data.title || '',
+//             description: data.description || '',
+//             sections: data.sections || [],
+//             status: data.status || 'draft',
+//             createdAt: data.createdAt,
+//             updatedAt: data.updatedAt,
+//             responsesCount: data.responsesCount || 0
+//           }
+//           setSelectedSurvey(survey)
+//           setTitle(survey.title)
+//           setDescription(survey.description)
+//           setSections(survey.sections)
+//         }
+//       } catch (error) {
+//         console.error('Error fetching survey:', error)
+//       }
+//     }
+
+//     if (params?.id) {
+//       fetchSurveyById(params.id as string)
+//       setShowSavedSurveys(false)
+//     }
+//   }, [params?.id])
 
 //   // Fetch surveys from Firebase
 //   useEffect(() => {
@@ -351,7 +390,7 @@
 //         sections: sections,
 //         status: status,
 //         updatedAt: serverTimestamp(),
-//         responsesCount: 0
+//         responsesCount: selectedSurvey?.responsesCount || 0
 //       })
 
 //       console.log('Saving survey data:', surveyData)
@@ -392,6 +431,21 @@
 //   const loadSurvey = (survey: Survey) => {
 //     setSelectedSurvey(survey)
 //     setShowSavedSurveys(false)
+//   }
+
+//   // Handle share survey
+//   const handleShareSurvey = (survey: Survey) => {
+//     const link = `${window.location.origin}/survey/${survey.id}`
+//     setShareLink(link)
+//     setShowShareModal(true)
+//   }
+
+//   // Copy link to clipboard
+//   const copyToClipboard = () => {
+//     if (shareLink) {
+//       navigator.clipboard.writeText(shareLink)
+//       alert('Link copied to clipboard!')
+//     }
 //   }
 
 //   // Delete survey
@@ -763,6 +817,51 @@
 
 //   return (
 //     <div className="space-y-6">
+//       {/* Share Link Modal */}
+//       {showShareModal && shareLink && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+//             <div className="flex items-center justify-between p-4 border-b">
+//               <h3 className="text-lg font-bold text-black">Share Survey</h3>
+//               <button
+//                 onClick={() => setShowShareModal(false)}
+//                 className="p-1 hover:bg-gray-100 rounded"
+//               >
+//                 <X className="w-5 h-5" />
+//               </button>
+//             </div>
+//             <div className="p-4">
+//               <p className="text-sm text-gray-600 mb-2">Share this link with respondents:</p>
+//               <div className="flex gap-2 mb-4">
+//                 <input
+//                   type="text"
+//                   value={shareLink}
+//                   readOnly
+//                   className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50"
+//                 />
+//                 <button
+//                   onClick={copyToClipboard}
+//                   className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm"
+//                 >
+//                   Copy
+//                 </button>
+//               </div>
+//               <div className="text-xs text-gray-500">
+//                 <p>Anyone with this link can submit responses</p>
+//               </div>
+//             </div>
+//             <div className="flex justify-end p-4 border-t">
+//               <button
+//                 onClick={() => setShowShareModal(false)}
+//                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded border border-gray-300"
+//               >
+//                 Close
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
 //       {/* Question Modal */}
 //       {showQuestionModal && (
 //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -877,22 +976,31 @@
 //               {showSavedSurveys ? 'Hide Saved' : 'View Saved'}
 //             </button>
 //             {selectedSurvey && (
-//               <button
-//                 onClick={() => {
-//                   setSelectedSurvey(null)
-//                   setTitle('New Survey')
-//                   setDescription('')
-//                   setSections([{
-//                     id: 'section-1',
-//                     title: 'Basic Information',
-//                     description: 'Please provide your feedback',
-//                     questions: []
-//                   }])
-//                 }}
-//                 className="px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-//               >
-//                 New Survey
-//               </button>
+//               <>
+//                 <button
+//                   onClick={() => handleShareSurvey(selectedSurvey)}
+//                   className="px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors flex items-center gap-1"
+//                 >
+//                   <Share className="w-4 h-4" />
+//                   Share
+//                 </button>
+//                 <button
+//                   onClick={() => {
+//                     setSelectedSurvey(null)
+//                     setTitle('New Survey')
+//                     setDescription('')
+//                     setSections([{
+//                       id: 'section-1',
+//                       title: 'Basic Information',
+//                       description: 'Please provide your feedback',
+//                       questions: []
+//                     }])
+//                   }}
+//                   className="px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+//                 >
+//                   New Survey
+//                 </button>
+//               </>
 //             )}
 //           </div>
 //         </div>
@@ -956,11 +1064,18 @@
 //                   </div>
 //                   <div className="flex items-center gap-1">
 //                     <button
+//                       onClick={() => handleShareSurvey(survey)}
+//                       className="p-1.5 hover:bg-green-50 rounded text-green-600 transition-colors"
+//                       title="Share survey"
+//                     >
+//                       <Share className="w-4 h-4" />
+//                     </button>
+//                     <button
 //                       onClick={() => loadSurvey(survey)}
 //                       className="p-1.5 hover:bg-blue-50 rounded text-blue-600 transition-colors"
 //                       title="Edit survey"
 //                     >
-//                       <Eye className="w-4 h-4" />
+//                       <Edit2 className="w-4 h-4" />
 //                     </button>
 //                     <button
 //                       onClick={() => duplicateSurvey(survey)}
@@ -1132,12 +1247,12 @@
 //     </div>
 //   )
 // }
-// new codee
 
+// new code
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Save, Eye, Copy, Download, X, ChevronDown, ChevronUp, Hash, Calendar, Star, ThumbsUp, CheckSquare, Radio, Type, MessageSquare, Share, Edit2 } from 'lucide-react'
+import { Plus, Trash2, Save, Eye, Copy, Download, X, ChevronDown, ChevronUp, Hash, Calendar, Star, ThumbsUp, CheckSquare, Radio, Type, MessageSquare, Share, Edit2, Users, Search } from 'lucide-react'
 import { db } from '@/lib/firebase'
 import { 
   collection, 
@@ -1149,9 +1264,22 @@ import {
   deleteDoc,
   updateDoc,
   serverTimestamp,
-  getDoc
+  getDoc,
+  getDocs
 } from 'firebase/firestore'
 import { useParams } from 'next/navigation'
+
+// Add Client/Lead interface
+interface ClientLead {
+  id: string
+  name: string
+  company: string
+  email: string
+  phone: string
+  type: 'client' | 'lead'
+  status?: string
+  tier?: string
+}
 
 interface Question {
   id: string
@@ -1182,6 +1310,15 @@ interface Survey {
   createdAt: any
   updatedAt: any
   responsesCount: number
+  // Add selected client/lead to survey
+  selectedClient?: {
+    phone: string
+    email: string
+    id: string
+    name: string
+    company: string
+    type: 'client' | 'lead'
+  }
 }
 
 export default function SurveyFormSection() {
@@ -1198,10 +1335,15 @@ export default function SurveyFormSection() {
   ])
   const [title, setTitle] = useState('New Survey')
   const [description, setDescription] = useState('')
-  const [loading, setLoading] = useState(false)
   const [showSavedSurveys, setShowSavedSurveys] = useState(false)
   const [shareLink, setShareLink] = useState<string | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
+  
+  // New state for clients and leads
+  const [clientsLeads, setClientsLeads] = useState<ClientLead[]>([])
+  const [selectedClientLead, setSelectedClientLead] = useState<ClientLead | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   
   // New state for question modal
   const [showQuestionModal, setShowQuestionModal] = useState(false)
@@ -1214,6 +1356,89 @@ export default function SurveyFormSection() {
   })
   const [optionInput, setOptionInput] = useState('')
   const [optionsList, setOptionsList] = useState<string[]>([])
+
+  // Fetch clients and leads from Firebase
+  useEffect(() => {
+    const fetchClientsAndLeads = async () => {
+      try {
+        const clients: ClientLead[] = []
+        const leads: ClientLead[] = []
+        
+        // Fetch clients
+        const clientsQuery = query(collection(db, 'clients'))
+        const clientsSnapshot = await getDocs(clientsQuery)
+        clientsSnapshot.forEach((doc) => {
+          const data = doc.data()
+          clients.push({
+            id: doc.id,
+            name: data.name || '',
+            company: data.company || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            type: 'client',
+            status: data.status || 'Active',
+            tier: data.tier || ''
+          })
+        })
+        
+        // Fetch leads
+        const leadsQuery = query(collection(db, 'leads'))
+        const leadsSnapshot = await getDocs(leadsQuery)
+        leadsSnapshot.forEach((doc) => {
+          const data = doc.data()
+          leads.push({
+            id: doc.id,
+            name: data.name || '',
+            company: data.company || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            type: 'lead',
+            status: data.status || 'New',
+            tier: data.tier || ''
+          })
+        })
+        
+        // Combine and sort
+        setClientsLeads([...clients, ...leads].sort((a, b) => a.name.localeCompare(b.name)))
+      } catch (error) {
+        console.error('Error fetching clients and leads:', error)
+      }
+    }
+    
+    fetchClientsAndLeads()
+  }, [])
+
+  // Filter clients/leads based on search
+  const filteredClientsLeads = clientsLeads.filter(item => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      item.name.toLowerCase().includes(searchLower) ||
+      item.company.toLowerCase().includes(searchLower) ||
+      item.email.toLowerCase().includes(searchLower) ||
+      item.phone.includes(searchTerm)
+    )
+  })
+
+  // Toggle dropdown
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen)
+    if (!isDropdownOpen) {
+      setSearchTerm('')
+    }
+  }
+
+  // Select client/lead
+  const selectClientLead = (item: ClientLead) => {
+    setSelectedClientLead(item)
+    setSearchTerm('')
+    setIsDropdownOpen(false)
+  }
+
+  // Clear selection
+  const clearSelection = () => {
+    setSelectedClientLead(null)
+    setSearchTerm('')
+  }
 
   // Fetch specific survey when editing from URL
   useEffect(() => {
@@ -1230,12 +1455,18 @@ export default function SurveyFormSection() {
             status: data.status || 'draft',
             createdAt: data.createdAt,
             updatedAt: data.updatedAt,
-            responsesCount: data.responsesCount || 0
+            responsesCount: data.responsesCount || 0,
+            selectedClient: data.selectedClient
           }
           setSelectedSurvey(survey)
           setTitle(survey.title)
           setDescription(survey.description)
           setSections(survey.sections)
+          
+          // Set selected client if exists
+          if (data.selectedClient) {
+            setSelectedClientLead(data.selectedClient)
+          }
         }
       } catch (error) {
         console.error('Error fetching survey:', error)
@@ -1265,7 +1496,8 @@ export default function SurveyFormSection() {
           status: data.status || 'draft',
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
-          responsesCount: data.responsesCount || 0
+          responsesCount: data.responsesCount || 0,
+          selectedClient: data.selectedClient
         })
       })
       setSurveys(surveysList)
@@ -1275,13 +1507,28 @@ export default function SurveyFormSection() {
   }, [])
 
   // Load selected survey data
-  useEffect(() => {
-    if (selectedSurvey) {
-      setTitle(selectedSurvey.title)
-      setDescription(selectedSurvey.description)
-      setSections(selectedSurvey.sections)
+ useEffect(() => {
+  if (selectedSurvey) {
+    setTitle(selectedSurvey.title)
+    setDescription(selectedSurvey.description)
+    setSections(selectedSurvey.sections)
+    
+    if (selectedSurvey.selectedClient) {
+      // Create a complete ClientLead object with defaults for missing fields
+      const clientLead: ClientLead = {
+        id: selectedSurvey.selectedClient.id,
+        name: selectedSurvey.selectedClient.name,
+        company: selectedSurvey.selectedClient.company,
+        type: selectedSurvey.selectedClient.type,
+        email: selectedSurvey.selectedClient.email || '',  // Use existing or default
+        phone: selectedSurvey.selectedClient.phone || ''   // Use existing or default
+      }
+      setSelectedClientLead(clientLead)
+    } else {
+      setSelectedClientLead(null)
     }
-  }, [selectedSurvey])
+  }
+}, [selectedSurvey])
 
   const addSection = () => {
     const newSection: FormSection = {
@@ -1506,18 +1753,18 @@ export default function SurveyFormSection() {
     return {
       ...data,
       sections: cleanedSections,
-      description: data.description || ''
+      description: data.description || '',
+      selectedClient: data.selectedClient || null
     }
   }
 
-  // Save survey to Firebase
+  // Save survey to Firebase - REMOVED LOADING STATES
   const saveSurvey = async (status: 'draft' | 'published' = 'draft') => {
     if (!title.trim()) {
       alert('Please enter a survey title')
       return
     }
 
-    setLoading(true)
     try {
       const surveyData = cleanSurveyData({
         title: title.trim(),
@@ -1525,7 +1772,13 @@ export default function SurveyFormSection() {
         sections: sections,
         status: status,
         updatedAt: serverTimestamp(),
-        responsesCount: selectedSurvey?.responsesCount || 0
+        responsesCount: selectedSurvey?.responsesCount || 0,
+        selectedClient: selectedClientLead ? {
+          id: selectedClientLead.id,
+          name: selectedClientLead.name,
+          company: selectedClientLead.company,
+          type: selectedClientLead.type
+        } : null
       })
 
       console.log('Saving survey data:', surveyData)
@@ -1546,6 +1799,8 @@ export default function SurveyFormSection() {
 
       // Reset form
       setSelectedSurvey(null)
+      setSelectedClientLead(null)
+      setSearchTerm('')
       setTitle('New Survey')
       setDescription('')
       setSections([{
@@ -1557,8 +1812,6 @@ export default function SurveyFormSection() {
     } catch (error) {
       console.error('Error saving survey:', error)
       alert('Error saving survey. Please try again.')
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -1591,6 +1844,8 @@ export default function SurveyFormSection() {
       await deleteDoc(doc(db, 'surveys', surveyId))
       if (selectedSurvey?.id === surveyId) {
         setSelectedSurvey(null)
+        setSelectedClientLead(null)
+        setSearchTerm('')
       }
       alert('Survey deleted successfully!')
     } catch (error) {
@@ -1609,7 +1864,8 @@ export default function SurveyFormSection() {
         status: 'draft',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        responsesCount: 0
+        responsesCount: 0,
+        selectedClient: survey.selectedClient
       })
       
       await addDoc(collection(db, 'surveys'), newSurveyData)
@@ -1628,7 +1884,8 @@ export default function SurveyFormSection() {
       sections: survey.sections,
       createdAt: survey.createdAt?.toDate?.()?.toISOString() || survey.createdAt,
       status: survey.status,
-      responsesCount: survey.responsesCount
+      responsesCount: survey.responsesCount,
+      selectedClient: survey.selectedClient
     }
     
     const dataStr = JSON.stringify(surveyData, null, 2)
@@ -2097,6 +2354,136 @@ export default function SurveyFormSection() {
         </div>
       )}
 
+      {/* NEW: Client/Lead Selection Dropdown - ABOVE Survey Title */}
+      <div className="bg-white rounded border border-gray-300 p-4">
+        <div className="space-y-3">
+          <div>
+            <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              SELECT CLIENT / LEAD *
+            </label>
+            
+            {/* Dropdown Toggle Button - FIXED: No nested buttons */}
+            <div className="relative">
+              <button
+                onClick={toggleDropdown}
+                type="button"
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-white text-black focus:outline-none focus:ring-1 focus:ring-black flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-gray-400" />
+                  <span className={selectedClientLead ? "text-black" : "text-gray-500"}>
+                    {selectedClientLead 
+                      ? `${selectedClientLead.name} - ${selectedClientLead.company} (${selectedClientLead.type})`
+                      : "Select a client or lead..."
+                    }
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {selectedClientLead && (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        clearSelection()
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded cursor-pointer"
+                    >
+                      <X className="w-4 h-4 text-gray-400" />
+                    </span>
+                  )}
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
+
+              {/* Dropdown Menu */}
+              {isDropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-96 overflow-hidden">
+                  {/* Search Input */}
+                  <div className="p-2 border-b border-gray-200">
+                    <div className="flex items-center gap-2 px-2 py-1 border border-gray-300 rounded bg-white">
+                      <Search className="w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search by name, company, email..."
+                        className="w-full text-sm bg-transparent border-0 focus:outline-none focus:ring-0 p-0"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  {/* Results */}
+                  <div className="max-h-60 overflow-y-auto">
+                    {filteredClientsLeads.length > 0 ? (
+                      filteredClientsLeads.map((item) => (
+                        <div
+                          key={`${item.type}-${item.id}`}
+                          onClick={() => selectClientLead(item)}
+                          className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-black">{item.name}</span>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                                  item.type === 'client' 
+                                    ? 'bg-blue-100 text-blue-800' 
+                                    : 'bg-green-100 text-green-800'
+                                }`}>
+                                  {item.type.toUpperCase()}
+                                </span>
+                                {item.status && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-800">
+                                    {item.status}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-0.5">
+                                <span>{item.company}</span>
+                                {item.email && <span> • {item.email}</span>}
+                                {item.phone && <span> • {item.phone}</span>}
+                              </div>
+                            </div>
+                            {item.tier && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 ml-2">
+                                {item.tier}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-sm text-gray-500 text-center">
+                        No clients or leads found
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Selected Item Display (when dropdown is closed) */}
+            {selectedClientLead && !isDropdownOpen && (
+              <div className="mt-2 p-2 bg-gray-50 rounded border border-gray-200 flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-700">Selected:</span>
+                <span className="text-xs text-black">{selectedClientLead.name}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
+                  {selectedClientLead.company}
+                </span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                  selectedClientLead.type === 'client' 
+                    ? 'bg-blue-100 text-blue-800' 
+                    : 'bg-green-100 text-green-800'
+                }`}>
+                  {selectedClientLead.type.toUpperCase()}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="bg-white rounded border border-gray-300 p-4">
         <div className="flex justify-between items-center mb-3">
@@ -2122,6 +2509,8 @@ export default function SurveyFormSection() {
                 <button
                   onClick={() => {
                     setSelectedSurvey(null)
+                    setSelectedClientLead(null)
+                    setSearchTerm('')
                     setTitle('New Survey')
                     setDescription('')
                     setSections([{
@@ -2196,6 +2585,13 @@ export default function SurveyFormSection() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">{survey.description}</p>
+                    {survey.selectedClient && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                          {survey.selectedClient.name} - {survey.selectedClient.company} ({survey.selectedClient.type})
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <button
@@ -2350,32 +2746,23 @@ export default function SurveyFormSection() {
         </button>
       )}
 
-      {/* Action Buttons */}
+      {/* Action Buttons - REMOVED LOADING STATES */}
       {!showSavedSurveys && (
         <div className="flex gap-2 sticky bottom-0 bg-white border-t border-gray-300 py-3 -mx-4 -mb-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
           <button 
             onClick={() => saveSurvey('draft')}
-            disabled={loading || !title.trim()}
+            disabled={!title.trim()}
             className="flex-1 px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-500 border border-gray-300 rounded hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-500 border-t-transparent"></div>
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                {selectedSurvey ? 'Update Draft' : 'Save Draft'}
-              </>
-            )}
+            <Save className="w-4 h-4" />
+            {selectedSurvey ? 'Update Draft' : 'Save Draft'}
           </button>
           <button 
             onClick={() => saveSurvey('published')}
-            disabled={loading || !title.trim()}
+            disabled={!title.trim()}
             className="flex-1 px-4 py-2 text-xs font-bold uppercase tracking-widest bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Publishing...' : 'Publish Survey'}
+            Publish Survey
           </button>
         </div>
       )}

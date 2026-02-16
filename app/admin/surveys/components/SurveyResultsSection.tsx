@@ -11,6 +11,14 @@ interface Survey {
   description: string
   status: string
   responsesCount: number
+  // Add selectedClient
+  selectedClient?: {
+    id: string
+    name: string
+    company: string
+    type: 'client' | 'lead'
+  }
+  // Keep these for backward compatibility
   clientName?: string
   company?: string
   sendCount?: number
@@ -42,11 +50,9 @@ interface Props {
 export default function SurveyResultsSection({ surveys }: Props) {
   const [selectedSurvey, setSelectedSurvey] = useState<string | null>(null)
   const [allResponses, setAllResponses] = useState<SurveyResponse[]>([])
-  const [loading, setLoading] = useState(true)
 
-  // Fetch all survey responses from Firebase
+  // Fetch all survey responses from Firebase - REMOVED loading state
   useEffect(() => {
-    setLoading(true)
     const responsesRef = collection(db, 'survey_submissions')
     const q = query(responsesRef, orderBy('submittedAt', 'desc'))
     
@@ -65,11 +71,26 @@ export default function SurveyResultsSection({ surveys }: Props) {
         })
       })
       setAllResponses(responsesList)
-      setLoading(false)
     })
     
     return () => unsubscribe()
   }, [])
+
+  // Helper function to get client info
+  const getClientInfo = (survey: Survey) => {
+    if (survey.selectedClient) {
+      return {
+        name: survey.selectedClient.name,
+        company: survey.selectedClient.company,
+        type: survey.selectedClient.type
+      }
+    }
+    return {
+      name: survey.clientName || 'General Client',
+      company: survey.company || 'General Company',
+      type: null
+    }
+  }
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -125,6 +146,9 @@ export default function SurveyResultsSection({ surveys }: Props) {
 
   // Get selected survey data
   const selectedSurveyData = selectedSurvey ? surveys.find(s => s.id === selectedSurvey) : null
+
+  // Get client info for selected survey
+  const selectedClientInfo = selectedSurveyData ? getClientInfo(selectedSurveyData) : null
 
   // Get unique questions from selected survey responses
   const uniqueQuestions = useMemo(() => {
@@ -271,7 +295,7 @@ export default function SurveyResultsSection({ surveys }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Stats */}
+      {/* Stats - FIXED avg completion rate */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white rounded border border-gray-300 p-3 shadow-none">
           <div className="flex items-center justify-between">
@@ -297,69 +321,74 @@ export default function SurveyResultsSection({ surveys }: Props) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Avg Completion</p>
-              <p className="text-xl font-bold text-black">{stats.totalResponses}%</p>
+              <p className="text-xl font-bold text-black">{stats.avgCompletionRate}%</p>
             </div>
             <PieChart className="w-5 h-5 text-gray-300 opacity-30" />
           </div>
         </div>
         
-       
+        <div className="bg-white rounded border border-gray-300 p-3 shadow-none">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Avg Rating</p>
+              <p className="text-xl font-bold text-black">{stats.avgRating}</p>
+            </div>
+            <User className="w-5 h-5 text-gray-300 opacity-30" />
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Survey Selector */}
+        {/* Survey Selector - REMOVED loading state */}
         <div className="bg-white rounded border border-gray-300 p-3 shadow-none">
           <h3 className="text-sm font-bold text-black mb-3">Survey List</h3>
           
-          {loading ? (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black mx-auto"></div>
-              <p className="text-xs text-gray-500 mt-2">Loading responses...</p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {surveys.map((survey) => {
-                const surveyResponseCount = allResponses.filter(r => r.surveyId === survey.id).length
-                
-                return (
-                  <button
-                    key={survey.id}
-                    onClick={() => setSelectedSurvey(survey.id)}
-                    className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                      selectedSurvey === survey.id
-                        ? 'bg-black text-white shadow-sm'
-                        : 'text-gray-900 hover:bg-gray-50 border border-transparent'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-bold text-[13px] truncate">{survey.title}</p>
-                        <p className={`text-[10px] uppercase font-medium ${selectedSurvey === survey.id ? 'text-gray-300' : 'text-gray-500'}`}>
-                          {surveyResponseCount} responses
-                        </p>
-                      </div>
-                      {surveyResponseCount > 0 && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                          selectedSurvey === survey.id 
-                            ? 'bg-white text-black' 
-                            : 'bg-gray-100 text-gray-700'
-                        }`}>
-                          {surveyResponseCount}
-                        </span>
-                      )}
+          <div className="space-y-1">
+            {surveys.map((survey) => {
+              const surveyResponseCount = allResponses.filter(r => r.surveyId === survey.id).length
+              const clientInfo = getClientInfo(survey)
+              
+              return (
+                <button
+                  key={survey.id}
+                  onClick={() => setSelectedSurvey(survey.id)}
+                  className={`w-full text-left px-3 py-2 rounded transition-colors ${
+                    selectedSurvey === survey.id
+                      ? 'bg-black text-white shadow-sm'
+                      : 'text-gray-900 hover:bg-gray-50 border border-transparent'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-bold text-[13px] truncate">{survey.title}</p>
+                      <p className={`text-[10px] uppercase font-medium ${selectedSurvey === survey.id ? 'text-gray-300' : 'text-gray-500'}`}>
+                        {clientInfo.name} • {clientInfo.company}
+                      </p>
+                      <p className={`text-[9px] ${selectedSurvey === survey.id ? 'text-gray-400' : 'text-gray-400'}`}>
+                        {surveyResponseCount} responses
+                      </p>
                     </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
+                    {surveyResponseCount > 0 && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                        selectedSurvey === survey.id 
+                          ? 'bg-white text-black' 
+                          : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {surveyResponseCount}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Details */}
         <div className="lg:col-span-2">
           {selectedSurveyData ? (
             <div className="space-y-4">
-              {/* Survey Info */}
+              {/* Survey Info - UPDATED with proper client info */}
               <div className="bg-white rounded border border-gray-300 p-4 shadow-none">
                 <div className="flex justify-between items-start mb-3">
                   <div>
@@ -381,12 +410,25 @@ export default function SurveyResultsSection({ surveys }: Props) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="bg-gray-50 border border-gray-200 rounded p-2">
                     <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Client</p>
-                    <p className="text-[11px] font-bold text-black truncate">{selectedSurveyData.clientName || 'General Client'}</p>
+                    <p className="text-[11px] font-bold text-black truncate">
+                      {selectedClientInfo?.name || 'General Client'}
+                    </p>
                   </div>
                   
                   <div className="bg-gray-50 border border-gray-200 rounded p-2">
                     <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Company</p>
-                    <p className="text-[11px] font-bold text-black truncate">{selectedSurveyData.company || 'General Company'}</p>
+                    <p className="text-[11px] font-bold text-black truncate">
+                      {selectedClientInfo?.company || 'General Company'}
+                    </p>
+                    {selectedClientInfo?.type && (
+                      <span className={`text-[8px] px-1 py-0.5 rounded ${
+                        selectedClientInfo.type === 'client' 
+                          ? 'bg-blue-100 text-blue-800' 
+                          : 'bg-green-100 text-green-800'
+                      }`}>
+                        {selectedClientInfo.type.toUpperCase()}
+                      </span>
+                    )}
                   </div>
                   
                   <div className="bg-gray-50 border border-gray-200 rounded p-2">
