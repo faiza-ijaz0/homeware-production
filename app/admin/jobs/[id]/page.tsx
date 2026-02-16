@@ -1,1976 +1,3 @@
-// 'use client'
-
-// import { useState, useEffect } from 'react'
-// import {
-//   ArrowLeft,
-//   Edit2,
-//   Trash2,
-//   AlertCircle,
-//   CheckCircle,
-//   Clock,
-//   MapPin,
-//   Users,
-//   Tag,
-//   DollarSign,
-//   ArrowRight,
-//   MessageSquare,
-//   Star,
-//   Zap,
-//   ClipboardCheck,
-//   Navigation,
-//   AlertTriangle,
-//   CheckSquare,
-//   MessageCircle,
-//   Calendar,
-//   Timer,
-//   ShieldCheck,
-//   Download,
-//   History,
-//   FileText,
-//   Plus,
-//   ChevronRight,
-//   Bell,
-//   TrendingUp,
-//   Activity,
-//   Cloud,
-//   Car,
-//   Wrench,
-//   Eye,
-//   Edit,
-//   Save,
-//   X,
-//   RefreshCw,
-//   BarChart3,
-//   Target,
-//   Award,
-//   ThumbsUp,
-//   ThumbsDown,
-//   Send,
-//   Phone,
-//   Mail,
-//   Building,
-//   Wifi,
-//   WifiOff,
-//   PlayCircle,
-//   Camera
-// } from 'lucide-react'
-// import Link from 'next/link'
-// import { useParams, useRouter } from 'next/navigation'
-// import { 
-//   collection, 
-//   query, 
-//   where, 
-//   getDocs, 
-//   doc, 
-//   getDoc, 
-//   updateDoc, 
-//   deleteDoc, 
-//   addDoc, 
-//   orderBy,
-//   Timestamp 
-// } from 'firebase/firestore'
-// import { db } from '@/lib/firebase'
-
-// export default function JobDetailPage() {
-//   const params = useParams()
-//   const router = useRouter()
-//   const jobId = params?.id as string
-  
-//   const [job, setJob] = useState<any>(null)
-//   const [activeTab, setActiveTab] = useState<'overview' | 'pre-execution' | 'execution' | 'completion' | 'notes' | 'tasks' | 'team' | 'reports' | 'feedback' | 'compensation'>('overview')
-//   const [showStatusModal, setShowStatusModal] = useState(false)
-//   const [notesText, setNotesText] = useState('')
-//   const [checklistItems, setChecklistItems] = useState<any[]>([])
-//   const [equipmentStatus, setEquipmentStatus] = useState<any[]>([])
-//   const [teamMembers, setTeamMembers] = useState<any[]>([])
-//   const [activityLog, setActivityLog] = useState<any[]>([])
-//   const [executionTasks, setExecutionTasks] = useState<any[]>([])
-//   const [executionTime, setExecutionTime] = useState({
-//     elapsedHours: 0,
-//     elapsedMinutes: 0,
-//     estimatedCompletion: 0,
-//     lastUpdate: ''
-//   })
-//   const [executionNotes, setExecutionNotes] = useState('')
-//   const [executionPhotos, setExecutionPhotos] = useState<any[]>([])
-//   const [jobNotes, setJobNotes] = useState<any[]>([])
-//   const [newJobNote, setNewJobNote] = useState('')
-//   const [taskAssignments, setTaskAssignments] = useState<any[]>([])
-//   const [jobReminders, setJobReminders] = useState<any[]>([])
-//   const [employeeReports, setEmployeeReports] = useState<any[]>([])
-//   const [employeeFeedback, setEmployeeFeedback] = useState<any[]>([])
-//   const [showJobNoteModal, setShowJobNoteModal] = useState(false)
-//   const [showTaskAssignmentModal, setShowTaskAssignmentModal] = useState(false)
-//   const [showReminderModal, setShowReminderModal] = useState(false)
-//   const [selectedTask, setSelectedTask] = useState<any>(null)
-//   const [selectedTeamMember, setSelectedTeamMember] = useState('')
-//   const [reminderTime, setReminderTime] = useState('08:00')
-//   const [reminderText, setReminderText] = useState('')
-//   const [selectedTaskForReminder, setSelectedTaskForReminder] = useState<any>(null)
-
-//   // Helper function to convert Firebase Timestamp to string
-//   const convertTimestamp = (timestamp: any): string => {
-//     if (!timestamp) return new Date().toISOString()
-    
-//     if (timestamp.toDate) {
-//       // It's a Firebase Timestamp
-//       return timestamp.toDate().toISOString()
-//     } else if (timestamp.seconds) {
-//       // It's a timestamp object
-//       return new Date(timestamp.seconds * 1000).toISOString()
-//     } else if (typeof timestamp === 'string') {
-//       // It's already a string
-//       return timestamp
-//     }
-//     return new Date().toISOString()
-//   }
-
-//   // Fetch REAL job data from Firebase
-//   useEffect(() => {
-//     const fetchJobData = async () => {
-//       try {
-//         if (!jobId) {
-//           router.push('/admin/jobs')
-//           return
-//         }
-
-//         // Fetch main job data from Firebase
-//         const jobDoc = await getDoc(doc(db, 'jobs', jobId))
-//         if (!jobDoc.exists()) {
-//           router.push('/admin/jobs')
-//           return
-//         }
-        
-//         const jobData = jobDoc.data()
-        
-//         // Convert all timestamps properly
-//         const realJob = {
-//           id: jobDoc.id,
-//           title: jobData.title || '',
-//           client: jobData.client || '',
-//           clientId: jobData.clientId || '',
-//           status: jobData.status || 'Pending',
-//           priority: jobData.priority || 'Medium',
-//           scheduledDate: jobData.scheduledDate || null,
-//           scheduledTime: jobData.scheduledTime || '',
-//           endTime: jobData.endTime || '',
-//           location: jobData.location || '',
-//           teamRequired: jobData.teamRequired || 1,
-//           budget: jobData.budget || 0,
-//           actualCost: jobData.actualCost || 0,
-//           description: jobData.description || '',
-//           riskLevel: jobData.riskLevel || 'Low',
-//           slaDeadline: jobData.slaDeadline || '',
-//           estimatedDuration: jobData.estimatedDuration || '',
-//           requiredSkills: jobData.requiredSkills || [],
-//           permits: jobData.permits || [],
-//           tags: jobData.tags || [],
-//           specialInstructions: jobData.specialInstructions || '',
-//           recurring: jobData.recurring || false,
-//           createdAt: convertTimestamp(jobData.createdAt),
-//           updatedAt: convertTimestamp(jobData.updatedAt),
-//           completedAt: jobData.completedAt ? convertTimestamp(jobData.completedAt) : '',
-//           executionLogs: jobData.executionLogs || [],
-//           assignedTo: jobData.assignedTo || [],
-//           assignedEmployees: jobData.assignedEmployees || [],
-//           reminderEnabled: jobData.reminderEnabled || false,
-//           reminderDate: jobData.reminderDate || '',
-//           reminderSent: jobData.reminderSent || false,
-//           services: jobData.services || [],
-//           overtimeRequired: jobData.overtimeRequired || false,
-//           overtimeHours: jobData.overtimeHours || 0,
-//           overtimeReason: jobData.overtimeReason || '',
-//           overtimeApproved: jobData.overtimeApproved || false,
-//           daysUntilSLA: jobData.slaDeadline ? 
-//             Math.ceil((new Date(jobData.slaDeadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0
-//         }
-        
-//         setJob(realJob)
-
-//         // Set REAL team members from assignedEmployees
-//         if (jobData.assignedEmployees && jobData.assignedEmployees.length > 0) {
-//           const realTeamMembers = jobData.assignedEmployees.map((emp: any, index: number) => ({
-//             id: emp.id || `emp-${index}`,
-//             name: emp.name || 'Unknown Employee',
-//             email: emp.email || '',
-//             role: 'Assigned Team Member',
-//             status: 'Confirmed',
-//             initials: emp.name ? emp.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) : 'EM',
-//             hourlyRate: 150,
-//             estimatedHours: 8,
-//             totalCompensation: 1200
-//           }))
-//           setTeamMembers(realTeamMembers)
-//         } else {
-//           // Default team members if none assigned
-//           setTeamMembers([
-//             { id: '1', name: 'Ahmed Hassan', role: 'Team Lead', status: 'Confirmed', initials: 'AH', hourlyRate: 150, estimatedHours: 8, totalCompensation: 1200 },
-//             { id: '2', name: 'Fatima Al-Mazrouei', role: 'Floor Specialist', status: 'Confirmed', initials: 'FA', hourlyRate: 120, estimatedHours: 8, totalCompensation: 960 }
-//           ])
-//         }
-
-//         // Set REAL activity log from executionLogs or create default
-//         if (jobData.executionLogs && jobData.executionLogs.length > 0) {
-//           const realActivityLog = jobData.executionLogs.map((log: any, index: number) => ({
-//             id: `log-${index}`,
-//             action: log.type || 'Activity',
-//             timestamp: log.timestamp ? convertTimestamp(log.timestamp) : new Date().toISOString(),
-//             user: 'System',
-//             details: log.notes || log.checklist ? `Checklist: ${log.checklist?.join(', ') || ''}` : 'Activity logged'
-//           }))
-//           setActivityLog(realActivityLog)
-//         } else {
-//           // Create default activity log with job creation
-//           setActivityLog([
-//             { id: '1', action: 'Created', timestamp: convertTimestamp(jobData.createdAt), user: 'System', details: `Job "${jobData.title}" created`, type: 'creation' },
-//             { id: '2', action: 'Status Updated', timestamp: convertTimestamp(jobData.updatedAt), user: 'System', details: `Status set to ${jobData.status}`, type: 'scheduling' },
-//             { id: '3', action: 'Team Assigned', timestamp: new Date().toISOString(), user: 'HR Manager', details: `${jobData.assignedEmployees?.length || 0} team members assigned`, type: 'assignment' }
-//           ])
-//         }
-
-//         // Set default data for other sections
-//         setChecklistItems([
-//           { id: '1', item: 'Job requirements reviewed', status: false },
-//           { id: '2', item: 'Client contact confirmed', status: false },
-//           { id: '3', item: 'Site access arrangements', status: false },
-//           { id: '4', item: 'Safety protocols reviewed', status: false },
-//           { id: '5', item: 'Equipment requirements checked', status: false },
-//           { id: '6', item: 'Team availability confirmed', status: false }
-//         ])
-
-//         setEquipmentStatus([
-//           { id: '1', item: 'Cleaning supplies', status: 'Ready', color: 'green' },
-//           { id: '2', item: 'Safety equipment', status: 'Ready', color: 'green' },
-//           { id: '3', item: 'Specialized tools', status: 'Pending', color: 'yellow' },
-//           { id: '4', item: 'Transportation', status: 'Ready', color: 'green' }
-//         ])
-
-//         setExecutionTasks([
-//           { id: '1', task: 'Floor deep cleaning - Main area', status: 'pending', progress: 0, reminder: null },
-//           { id: '2', task: 'Window exterior cleaning', status: 'pending', progress: 0, reminder: null },
-//           { id: '3', task: 'Cubicle sanitization', status: 'pending', progress: 0, reminder: null },
-//           { id: '4', task: 'Restroom deep clean', status: 'pending', progress: 0, reminder: null }
-//         ])
-
-//         // Set job notes from specialInstructions
-//         const notes = []
-//         if (jobData.specialInstructions && jobData.specialInstructions.trim()) {
-//           notes.push({
-//             id: '1',
-//             text: jobData.specialInstructions,
-//             author: 'Operations',
-//             timestamp: new Date().toISOString(),
-//             type: 'important'
-//           })
-//         }
-//         notes.push({
-//           id: '2',
-//           text: 'Client prefers morning service',
-//           author: 'Sales Team',
-//           timestamp: new Date().toISOString(),
-//           type: 'general'
-//         })
-//         setJobNotes(notes)
-
-//         setTaskAssignments([
-//           { id: '1', taskId: '1', taskName: 'Floor deep cleaning - Main area', assignedTo: 'Fatima Al-Mazrouei', status: 'pending' },
-//           { id: '2', taskId: '2', taskName: 'Window exterior cleaning', assignedTo: 'Mohammed Bin Ali', status: 'pending' },
-//           { id: '3', taskId: '3', taskName: 'Cubicle sanitization', assignedTo: 'Ahmed Hassan', status: 'pending' }
-//         ])
-
-//         setJobReminders([
-//           { id: '1', text: 'Team check-in reminder', remindAt: '08:00', enabled: true },
-//           { id: '2', text: 'Equipment arrival confirmation', remindAt: '07:30', enabled: true }
-//         ])
-
-//         setEmployeeReports([
-//           { id: '1', employee: 'Ahmed Hassan', jobId: jobId, date: new Date().toISOString(), hoursWorked: 8, tasksCompleted: 4, status: 'submitted', notes: 'All tasks completed successfully' },
-//           { id: '2', employee: 'Fatima Al-Mazrouei', jobId: jobId, date: new Date().toISOString(), hoursWorked: 7.5, tasksCompleted: 3, status: 'submitted', notes: 'Minor delay due to client requests' }
-//         ])
-
-//         setEmployeeFeedback([
-//           { id: '1', employee: 'Ahmed Hassan', jobId: jobId, date: new Date().toISOString(), rating: 5, feedback: 'Excellent coordination with team. High quality work delivered on time.', category: 'performance' },
-//           { id: '2', employee: 'Fatima Al-Mazrouei', jobId: jobId, date: new Date().toISOString(), rating: 4, feedback: 'Good work quality. Communication could be improved.', category: 'performance' }
-//         ])
-
-//       } catch (error) {
-//         console.error('Error fetching job data:', error)
-//       }
-//     }
-
-//     if (jobId) {
-//       fetchJobData()
-//     }
-//   }, [jobId, router])
-
-//   // ========== JOB STATUS UPDATE FUNCTION ==========
-//   const handleUpdateJobStatus = async (newStatus: string) => {
-//     try {
-//       // Update in Firebase
-//       const jobRef = doc(db, 'jobs', jobId)
-//       const updateData: any = {
-//         status: newStatus,
-//         updatedAt: Timestamp.fromDate(new Date())
-//       }
-      
-//       // Add completedAt timestamp if completing job
-//       if (newStatus === 'Completed') {
-//         updateData.completedAt = Timestamp.fromDate(new Date())
-//       }
-      
-//       // Add startedAt timestamp if starting job
-//       if (newStatus === 'In Progress') {
-//         updateData.startedAt = Timestamp.fromDate(new Date())
-//       }
-      
-//       await updateDoc(jobRef, updateData)
-
-//       // Update local state
-//       setJob((prev: any) => ({
-//         ...prev,
-//         status: newStatus,
-//         updatedAt: new Date().toISOString(),
-//         ...(newStatus === 'Completed' && { completedAt: new Date().toISOString() }),
-//         ...(newStatus === 'In Progress' && { startedAt: new Date().toISOString() })
-//       }))
-
-//       // Add to activity log
-//       const newLog = {
-//         id: Date.now().toString(),
-//         action: 'Status Updated',
-//         timestamp: new Date().toISOString(),
-//         user: 'Admin',
-//         details: `Job status changed to ${newStatus}`
-//       }
-//       setActivityLog(prev => [newLog, ...prev])
-      
-//       alert(`Job status updated to ${newStatus}`)
-//       setShowStatusModal(false)
-//     } catch (error) {
-//       console.error('Error updating job status:', error)
-//       alert('Error updating job status')
-//     }
-//   }
-
-//   // ========== DELETE JOB FUNCTION ==========
-//   const handleDeleteJob = async () => {
-//     if (window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
-//       try {
-//         // Delete from Firebase
-//         await deleteDoc(doc(db, 'jobs', jobId))
-        
-//         alert('Job deleted successfully')
-//         router.push('/admin/jobs')
-//       } catch (error) {
-//         console.error('Error deleting job:', error)
-//         alert('Error deleting job')
-//       }
-//     }
-//   }
-
-//   // ========== START JOB FUNCTION ==========
-//   const handleStartJob = async () => {
-//     try {
-//       await handleUpdateJobStatus('In Progress')
-//     } catch (error) {
-//       console.error('Error starting job:', error)
-//     }
-//   }
-
-//   // ========== COMPLETE JOB FUNCTION ==========
-//   const handleCompleteJob = async () => {
-//     try {
-//       await handleUpdateJobStatus('Completed')
-//     } catch (error) {
-//       console.error('Error completing job:', error)
-//     }
-//   }
-
-//   const handleChecklistChange = (index: number) => {
-//     setChecklistItems(prev => prev.map((item, i) => 
-//       i === index ? { ...item, status: !item.status } : item
-//     ))
-//     addActivityLog('Checklist Updated', `${checklistItems[index].item} marked as ${!checklistItems[index].status ? 'done' : 'pending'}`)
-//   }
-
-//   const handleEquipmentStatusChange = (index: number, newStatus: string) => {
-//     setEquipmentStatus(prev => {
-//       const newColor = newStatus === 'Ready' ? 'green' : newStatus === 'Pending' ? 'yellow' : 'red'
-//       return prev.map((item, i) => 
-//         i === index ? { ...item, status: newStatus, color: newColor } : item
-//       )
-//     })
-//     addActivityLog('Equipment Status Updated', `${equipmentStatus[index].item} status changed to ${newStatus}`)
-//   }
-
-//   const handleTeamStatusChange = (index: number, newStatus: string) => {
-//     setTeamMembers(prev => prev.map((member, i) => 
-//       i === index ? { ...member, status: newStatus } : member
-//     ))
-//     addActivityLog('Team Status Updated', `${teamMembers[index].name} marked as ${newStatus}`)
-//   }
-
-//   const addActivityLog = (action: string, details: string) => {
-//     const now = new Date()
-//     const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-//     setActivityLog(prev => [{ id: Date.now().toString(), action, timestamp, user: 'Current User', details }, ...prev])
-//   }
-
-//   const handleTaskStatusChange = (index: number, newStatus: string) => {
-//     setExecutionTasks(prev => prev.map((task, i) => 
-//       i === index ? { ...task, status: newStatus, progress: newStatus === 'completed' ? 100 : newStatus === 'in-progress' ? 60 : 0 } : task
-//     ))
-//     addActivityLog('Task Updated', `${executionTasks[index].task} status changed to ${newStatus}`)
-//   }
-
-//   const handleTaskProgressChange = (index: number, newProgress: number) => {
-//     setExecutionTasks(prev => prev.map((task, i) => 
-//       i === index ? { ...task, progress: newProgress, status: newProgress === 100 ? 'completed' : 'in-progress' } : task
-//     ))
-//     addActivityLog('Task Progress Updated', `Task progress updated to ${newProgress}%`)
-//   }
-
-//   const handleSaveExecutionNotes = () => {
-//     if (executionNotes.trim()) {
-//       addActivityLog('Execution Notes', executionNotes)
-//       setExecutionNotes('')
-//     }
-//   }
-
-//   const handleUploadPhoto = (stage: string) => {
-//     const newPhoto = {
-//       id: executionPhotos.length + 1,
-//       stage: stage,
-//       uploadedAt: new Date().toLocaleString()
-//     }
-//     setExecutionPhotos(prev => [newPhoto, ...prev])
-//     addActivityLog('Photo Uploaded', `${stage} photo added to documentation`)
-//   }
-
-//   const getTaskProgress = () => {
-//     const completed = executionTasks.filter(t => t.status === 'completed').length
-//     const total = executionTasks.length
-//     return Math.round((completed / total) * 100)
-//   }
-
-//   const handleAddJobNote = () => {
-//     if (newJobNote.trim()) {
-//       const newNote = {
-//         id: jobNotes.length + 1,
-//         text: newJobNote,
-//         author: 'Current User',
-//         timestamp: new Date().toLocaleDateString('en-US', { 
-//           year: 'numeric', 
-//           month: '2-digit', 
-//           day: '2-digit',
-//           hour: '2-digit',
-//           minute: '2-digit'
-//         }),
-//         type: 'general'
-//       }
-//       setJobNotes([...jobNotes, newNote])
-//       setNewJobNote('')
-//       addActivityLog('Job Note Added', newJobNote)
-//       setShowJobNoteModal(false)
-//     }
-//   }
-
-//   const handleAssignTask = () => {
-//     if (selectedTask && selectedTeamMember) {
-//       setTaskAssignments(taskAssignments.map(assignment => 
-//         assignment.taskId === selectedTask.id 
-//           ? { ...assignment, assignedTo: selectedTeamMember }
-//           : assignment
-//       ))
-//       addActivityLog('Task Assignment', `${selectedTask.taskName} assigned to ${selectedTeamMember}`)
-//       setShowTaskAssignmentModal(false)
-//       setSelectedTask(null)
-//       setSelectedTeamMember('')
-//     }
-//   }
-
-//   const handleAddReminder = () => {
-//     if (reminderText.trim()) {
-//       const newReminder = {
-//         id: jobReminders.length + 1,
-//         text: reminderText,
-//         remindAt: reminderTime,
-//         enabled: true
-//       }
-//       setJobReminders([...jobReminders, newReminder])
-//       addActivityLog('Reminder Created', `${reminderText} at ${reminderTime}`)
-//       setReminderText('')
-//       setReminderTime('08:00')
-//       setShowReminderModal(false)
-//     }
-//   }
-
-//   const handleToggleReminder = (index: number) => {
-//     setJobReminders(jobReminders.map((reminder, i) =>
-//       i === index
-//         ? { ...reminder, enabled: !reminder.enabled }
-//         : reminder
-//     ))
-//     addActivityLog('Reminder Status', `${jobReminders[index].text} ${!jobReminders[index].enabled ? 'enabled' : 'disabled'}`)
-//   }
-
-//   const handleRemoveReminder = (index: number) => {
-//     const reminder = jobReminders[index]
-//     setJobReminders(jobReminders.filter((_, i) => i !== index))
-//     addActivityLog('Reminder Removed', reminder?.text || '')
-//   }
-
-//   const handleRemoveJobNote = (index: number) => {
-//     const note = jobNotes[index]
-//     setJobNotes(jobNotes.filter((_, i) => i !== index))
-//     addActivityLog('Job Note Removed', note?.text || '')
-//   }
-
-//   const handleAddTaskReminder = (index: number) => {
-//     if (reminderTime) {
-//       setExecutionTasks(prev => prev.map((task, i) =>
-//         i === index
-//           ? { ...task, reminder: { time: reminderTime, enabled: true } }
-//           : task
-//       ))
-//       addActivityLog('Task Reminder Set', `Reminder set for "${executionTasks[index].task}" at ${reminderTime}`)
-//       setShowReminderModal(false)
-//       setReminderTime('08:00')
-//       setSelectedTaskForReminder(null)
-//     }
-//   }
-
-//   const handleToggleTaskReminder = (index: number) => {
-//     setExecutionTasks(prev => prev.map((task, i) =>
-//       i === index && task.reminder
-//         ? { ...task, reminder: { ...task.reminder, enabled: !task.reminder.enabled } }
-//         : task
-//     ))
-//   }
-
-//   const handleRemoveTaskReminder = (index: number) => {
-//     setExecutionTasks(prev => prev.map((task, i) =>
-//       i === index
-//         ? { ...task, reminder: null }
-//         : task
-//     ))
-//     addActivityLog('Task Reminder Removed', `Reminder removed for "${executionTasks[index].task}"`)
-//   }
-
-//   const handleReassignTeamMember = (taskIndex: number, newMember: string) => {
-//     const oldAssignment = taskAssignments[taskIndex]
-//     setTaskAssignments(taskAssignments.map((assignment, idx) =>
-//       idx === taskIndex
-//         ? { ...assignment, assignedTo: newMember }
-//         : assignment
-//     ))
-//     addActivityLog('Team Member Reassigned', `${oldAssignment.taskName} reassigned to ${newMember}`)
-//   }
-
-//   const calculateProgressMetrics = () => {
-//     const checklistCompletion = checklistItems.length > 0 
-//       ? Math.round((checklistItems.filter(c => c.status).length / checklistItems.length) * 100)
-//       : 0
-    
-//     const equipmentReadiness = equipmentStatus.length > 0
-//       ? Math.round((equipmentStatus.filter(e => e.status === 'Ready').length / equipmentStatus.length) * 100)
-//       : 0
-    
-//     const teamReadiness = teamMembers.length > 0
-//       ? Math.round((teamMembers.filter(m => m.status === 'Confirmed').length / teamMembers.length) * 100)
-//       : 0
-    
-//     const overallReadiness = Math.round((checklistCompletion + equipmentReadiness + teamReadiness) / 3)
-    
-//     return {
-//       checklistCompletion,
-//       equipmentReadiness,
-//       teamReadiness,
-//       overallReadiness
-//     }
-//   }
-
-//   if (!job) {
-//     return (
-//       <div className="min-h-screen bg-white flex flex-col items-center justify-center">
-//         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mb-4"></div>
-//         <p className="text-gray-600">Loading job details...</p>
-//       </div>
-//     )
-//   }
-
-//   const progressMetrics = calculateProgressMetrics()
-
-//   return (
-//     <div className="min-h-screen bg-white text-gray-900 p-6 space-y-8">
-//       {/* Enhanced Header with Real-time Status */}
-//       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-//         <div className="flex items-center gap-4">
-//           <Link href="/admin/jobs" className="p-2 bg-gray-100 border border-gray-300 rounded-xl hover:bg-gray-200 transition-all">
-//             <ArrowLeft className="w-5 h-5 text-gray-600" />
-//           </Link>
-//           <div className="space-y-1">
-//             <div className="flex items-center gap-3">
-//               <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
-//               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-//                 job.status === 'Scheduled' ? 'bg-indigo-100 text-indigo-700' :
-//                 job.status === 'In Progress' ? 'bg-green-100 text-green-700' :
-//                 job.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
-//                 'bg-gray-100 text-gray-700'
-//               }`}>
-//                 {job.status}
-//               </span>
-//               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-//                 job.priority === 'Critical' ? 'bg-red-100 text-red-700' :
-//                 job.priority === 'High' ? 'bg-orange-100 text-orange-700' :
-//                 job.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-//                 'bg-blue-100 text-blue-700'
-//               }`}>
-//                 {job.priority}
-//               </span>
-//             </div>
-//             <div className="flex items-center gap-4 text-sm text-gray-600">
-//               <div className="flex items-center gap-1">
-//                 <Users className="w-4 h-4" />
-//                 {job.client}
-//               </div>
-//               <div className="flex items-center gap-1">
-//                 <MapPin className="w-4 h-4" />
-//                 {job.location}
-//               </div>
-//               {job.scheduledDate && (
-//                 <div className="flex items-center gap-1">
-//                   <Calendar className="w-4 h-4" />
-//                   {new Date(job.scheduledDate).toLocaleDateString('en-US', { 
-//                     year: 'numeric', 
-//                     month: '2-digit', 
-//                     day: '2-digit' 
-//                   })}
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//         </div>
-
-//         <div className="flex items-center gap-3">
-         
-//           <button
-//             onClick={() => setShowStatusModal(true)}
-//             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all"
-//           >
-//             <RefreshCw className="w-4 h-4" />
-//             <span>Update Status</span>
-//           </button>
-         
-//         </div>
-//       </div>
-
-//       {/* Enhanced Quick Stats Bar */}
-//       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-//         {[
-//           { 
-//             label: 'Scheduled Date', 
-//             value: job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString('en-US', { 
-//               month: 'short', 
-//               day: 'numeric', 
-//               year: 'numeric' 
-//             }) : 'Not Scheduled', 
-//             sub: job.scheduledTime || '', 
-//             icon: Calendar, 
-//             color: 'text-blue-600' 
-//           },
-//           { 
-//             label: 'Duration', 
-//             value: job.estimatedDuration || 'Not set', 
-//             sub: 'Estimated', 
-//             icon: Timer, 
-//             color: 'text-indigo-600' 
-//           },
-//           { 
-//             label: 'Budget', 
-//             value: `AED ${job.budget ? job.budget.toLocaleString() : '0'}`, 
-//             sub: 'Total Budget', 
-//             icon: DollarSign, 
-//             color: 'text-emerald-600' 
-//           },
-//           { 
-//             label: 'SLA Deadline', 
-//             value: job.slaDeadline ? new Date(job.slaDeadline).toLocaleDateString('en-US', { 
-//               month: 'short', 
-//               day: 'numeric' 
-//             }) : 'Not set', 
-//             sub: job.daysUntilSLA > 0 ? `${job.daysUntilSLA} days left` : 'Expired', 
-//             icon: ShieldCheck, 
-//             color: job.daysUntilSLA <= 1 ? 'text-red-600' : 'text-amber-600' 
-//           },
-//           { 
-//             label: 'Risk Level', 
-//             value: (job.riskLevel || 'Low').toUpperCase(), 
-//             sub: 'Assessment', 
-//             icon: job.riskLevel === 'High' ? AlertTriangle : job.riskLevel === 'Medium' ? Clock : CheckCircle, 
-//             color: job.riskLevel === 'High' ? 'text-red-600' : job.riskLevel === 'Medium' ? 'text-yellow-600' : 'text-green-600' 
-//           },
-//         ].map((stat, i) => (
-//           <div key={i} className="bg-white border border-gray-300 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all">
-//             <div className="flex items-center gap-3 mb-3">
-//               <div className="p-2 bg-gray-100 rounded-lg">
-//                 <stat.icon className={`w-4 h-4 ${stat.color}`} />
-//               </div>
-//               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{stat.label}</span>
-//             </div>
-//             <div className="text-lg font-bold text-gray-900">{stat.value}</div>
-//             <div className="text-xs text-gray-600">{stat.sub}</div>
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Enhanced Workflow Actions - Dynamic based on status */}
-//       {job.status === 'Pending' && (
-//         <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 rounded-2xl p-6">
-//           <div className="flex items-center justify-between mb-6">
-//             <h3 className="text-lg font-bold text-yellow-900 flex items-center gap-2">
-//               <Clock className="w-5 h-5" />
-//               Job Pending - Awaiting Action
-//             </h3>
-//             <button
-//               onClick={() => handleUpdateJobStatus('Scheduled')}
-//               className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium"
-//             >
-//               Schedule Job
-//             </button>
-//           </div>
-//           <p className="text-sm text-yellow-800">
-//             This job is currently pending. You can schedule it or update its status.
-//           </p>
-//         </div>
-//       )}
-
-//       {job.status === 'Scheduled' && (
-//         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-300 rounded-2xl p-6">
-//           <div className="flex items-center justify-between mb-6">
-//             <h3 className="text-lg font-bold text-blue-900 flex items-center gap-2">
-//               <Calendar className="w-5 h-5" />
-//               Pre-Execution Workflow
-//             </h3>
-//             <div className="flex items-center gap-2">
-//               <span className="text-sm font-medium text-blue-700">Progress: {progressMetrics.overallReadiness}%</span>
-//               <div className="w-24 bg-blue-200 rounded-full h-2">
-//                 <div 
-//                   className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
-//                   style={{ width: `${progressMetrics.overallReadiness}%` }}
-//                 ></div>
-//               </div>
-//             </div>
-//           </div>
-//           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-//             <button
-//               onClick={() => setActiveTab('pre-execution')}
-//               className="group p-4 bg-blue-100 hover:bg-blue-200 border border-blue-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <ClipboardCheck className="w-6 h-6 text-blue-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-blue-900">Pre-Job Checklist</span>
-//               <div className="text-[10px] text-blue-700 mt-1">{progressMetrics.checklistCompletion}% Complete</div>
-//             </button>
-//             <button
-//               onClick={() => setActiveTab('team')}
-//               className="group p-4 bg-purple-100 hover:bg-purple-200 border border-purple-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <Users className="w-6 h-6 text-purple-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-purple-900">Team Assignment</span>
-//               <div className="text-[10px] text-purple-700 mt-1">{progressMetrics.teamReadiness}% Ready</div>
-//             </button>
-//             <div className="group p-4 bg-green-100 hover:bg-green-200 border border-green-400 rounded-xl text-center transition-all hover:scale-105">
-//               <ShieldCheck className="w-6 h-6 text-green-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-green-900">Permit Tracker</span>
-//               <div className="text-[10px] text-green-700 mt-1">{job.permits ? job.permits.length : 0} Approved</div>
-//             </div>
-//             <div className="group p-4 bg-orange-100 hover:bg-orange-200 border border-orange-400 rounded-xl text-center transition-all hover:scale-105">
-//               <Wrench className="w-6 h-6 text-orange-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-orange-900">Equipment</span>
-//               <div className="text-[10px] text-orange-700 mt-1">{progressMetrics.equipmentReadiness}% Ready</div>
-//             </div>
-//             <button
-//               onClick={handleStartJob}
-//               className="group p-4 bg-indigo-100 hover:bg-indigo-200 border border-indigo-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <ArrowRight className="w-6 h-6 text-indigo-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-indigo-900">Start Job</span>
-//               <div className="text-[10px] text-indigo-700 mt-1">Begin Execution</div>
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {job.status === 'In Progress' && (
-//         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-2xl p-6">
-//           <div className="flex items-center justify-between mb-6">
-//             <h3 className="text-lg font-bold text-green-900 flex items-center gap-2">
-//               <Activity className="w-5 h-5" />
-//               Active Execution Workflow
-//             </h3>
-//             <div className="flex items-center gap-2 px-3 py-1 bg-green-100 rounded-full">
-//               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-//               <span className="text-xs font-bold text-green-800">LIVE TRACKING</span>
-//             </div>
-//           </div>
-//           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-//             <button
-//               onClick={() => setActiveTab('execution')}
-//               className="group p-4 bg-green-100 hover:bg-green-200 border border-green-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <Eye className="w-6 h-6 text-green-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-green-900">Live View</span>
-//               <div className="text-[10px] text-green-700 mt-1">Real-time Monitoring</div>
-//             </button>
-//             <button
-//               onClick={() => setActiveTab('tasks')}
-//               className="group p-4 bg-blue-100 hover:bg-blue-200 border border-blue-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <CheckSquare className="w-6 h-6 text-blue-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-blue-900">Task Progress</span>
-//               <div className="text-[10px] text-blue-700 mt-1">Track Completion</div>
-//             </button>
-//             <button
-//               onClick={() => setActiveTab('notes')}
-//               className="group p-4 bg-orange-100 hover:bg-orange-200 border border-orange-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <AlertTriangle className="w-6 h-6 text-orange-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-orange-900">Damage Check</span>
-//               <div className="text-[10px] text-orange-700 mt-1">Quality Control</div>
-//             </button>
-//             <button
-//               onClick={() => setActiveTab('notes')}
-//               className="group p-4 bg-red-100 hover:bg-red-200 border border-red-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <AlertCircle className="w-6 h-6 text-red-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-red-900">Incidents</span>
-//               <div className="text-[10px] text-red-700 mt-1">Report Issues</div>
-//             </button>
-//             <button
-//               onClick={handleCompleteJob}
-//               className="group p-4 bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <CheckCircle className="w-6 h-6 text-emerald-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-emerald-900">Complete Job</span>
-//               <div className="text-[10px] text-emerald-700 mt-1">Finish Execution</div>
-//             </button>
-//           </div>
-//         </div>
-//       )}
-
-//       {job.status === 'Completed' && (
-//         <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-300 rounded-2xl p-6">
-//           <div className="flex items-center justify-between mb-6">
-//             <h3 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
-//               <Award className="w-5 h-5" />
-//               Post-Completion Workflow
-//             </h3>
-//             <div className="flex items-center gap-2 px-3 py-1 bg-emerald-100 rounded-full">
-//               <CheckCircle className="w-3 h-3 text-emerald-700" />
-//               <span className="text-xs font-bold text-emerald-800">JOB COMPLETED</span>
-//             </div>
-//           </div>
-//           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-//             <button
-//               onClick={() => setActiveTab('completion')}
-//               className="group p-4 bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <CheckCircle className="w-6 h-6 text-emerald-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-emerald-900">Job Closure</span>
-//               <div className="text-[10px] text-emerald-700 mt-1">Final Documentation</div>
-//             </button>
-//             <button
-//               onClick={() => setActiveTab('feedback')}
-//               className="group p-4 bg-indigo-100 hover:bg-indigo-200 border border-indigo-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <Star className="w-6 h-6 text-indigo-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-indigo-900">Client Feedback</span>
-//               <div className="text-[10px] text-indigo-700 mt-1">Collect Reviews</div>
-//             </button>
-//             <button
-//               onClick={() => setActiveTab('completion')}
-//               className="group p-4 bg-purple-100 hover:bg-purple-200 border border-purple-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <MessageSquare className="w-6 h-6 text-purple-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-purple-900">Review Request</span>
-//               <div className="text-[10px] text-purple-700 mt-1">Request Approval</div>
-//             </button>
-//             <button
-//               onClick={() => setActiveTab('completion')}
-//               className="group p-4 bg-pink-100 hover:bg-pink-200 border border-pink-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <FileText className="w-6 h-6 text-pink-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-pink-900">Client Summary</span>
-//               <div className="text-[10px] text-pink-700 mt-1">Final Report</div>
-//             </button>
-//             <Link
-//               href={`/admin/finance/invoice-generator?jobId=${jobId}`}
-//               className="group p-4 bg-blue-100 hover:bg-blue-200 border border-blue-400 rounded-xl text-center transition-all hover:scale-105"
-//             >
-//               <DollarSign className="w-6 h-6 text-blue-700 mx-auto mb-2 group-hover:scale-110 transition-transform" />
-//               <span className="text-xs font-bold text-blue-900">Generate Invoice</span>
-//               <div className="text-[10px] text-blue-700 mt-1">Billing Process</div>
-//             </Link>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Tab Navigation */}
-//       <div className="grid grid-cols-5 gap-2 p-1 bg-white border border-gray-300 rounded-2xl shadow-sm">
-//         {[
-//           { id: 'overview', label: 'Overview', icon: FileText },
-//           { id: 'pre-execution', label: 'Pre-Execution', icon: ClipboardCheck },
-//           { id: 'execution', label: 'Execution', icon: Navigation },
-//           { id: 'notes', label: 'Notes & Reminders', icon: MessageSquare },
-//           { id: 'tasks', label: 'Task Assignment', icon: CheckCircle },
-//           { id: 'team', label: 'Team Management', icon: Users },
-//           { id: 'compensation', label: 'Compensation', icon: DollarSign },
-//           { id: 'feedback', label: 'Employee Feedback', icon: Star },
-//           { id: 'reports', label: 'Employee Reports', icon: FileText },
-//           { id: 'completion', label: 'Completion', icon: CheckSquare },
-//         ].map((tab) => (
-//           <button
-//             key={tab.id}
-//             onClick={() => setActiveTab(tab.id as any)}
-//             className={`flex flex-col items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
-//               activeTab === tab.id
-//                 ? 'bg-indigo-600 text-white shadow-md'
-//                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-//             }`}
-//           >
-//             <tab.icon className="w-4 h-4" />
-//             <span className="line-clamp-2 text-center">{tab.label}</span>
-//           </button>
-//         ))}
-//       </div>
-
-//       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-//         {/* Main Content Area */}
-//         <div className="lg:col-span-8 space-y-8">
-//           {activeTab === 'overview' && (
-//             <>
-//               {/* Description & Notes */}
-//               <div className="bg-white border border-gray-300 rounded-3xl p-8 space-y-6 shadow-sm">
-//                 <div>
-//                   <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-//                     <FileText className="w-5 w-5 text-indigo-600" />
-//                     Job Description
-//                   </h3>
-//                   <p className="text-gray-700 leading-relaxed">{job.description || 'No description provided'}</p>
-//                 </div>
-//                 {job.specialInstructions && (
-//                   <div className="p-6 bg-indigo-50 border border-indigo-300 rounded-2xl">
-//                     <h4 className="text-sm font-bold text-indigo-900 mb-2">Special Instructions</h4>
-//                     <p className="text-sm text-gray-800">{job.specialInstructions}</p>
-//                   </div>
-//                 )}
-//               </div>
-
-//               {/* Requirements Grid */}
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//                 <div className="bg-white border border-gray-300 rounded-3xl p-6 shadow-sm">
-//                   <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-widest">Required Skills</h3>
-//                   <div className="flex flex-wrap gap-2">
-//                     {job.requiredSkills && job.requiredSkills.length > 0 ? (
-//                       job.requiredSkills.map((skill: string, i: number) => (
-//                         <span key={i} className="px-3 py-1 bg-blue-100 text-blue-900 rounded-lg text-xs font-bold border border-blue-300">
-//                           {skill}
-//                         </span>
-//                       ))
-//                     ) : (
-//                       <span className="text-sm text-gray-500 italic">No skills specified</span>
-//                     )}
-//                   </div>
-//                 </div>
-//                 <div className="bg-white border border-gray-300 rounded-3xl p-6 shadow-sm">
-//                   <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-widest">Permits & Access</h3>
-//                   <div className="space-y-3">
-//                     {job.permits && job.permits.length > 0 ? (
-//                       job.permits.map((permit: any, i: number) => (
-//                         <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-300">
-//                           <div className="flex items-center gap-3">
-//                             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-//                             <div>
-//                               <div className="text-sm font-medium text-gray-900">
-//                                 {typeof permit === 'string' ? permit : permit.name || 'Permit'}
-//                               </div>
-//                               {permit.expiryDate && (
-//                                 <div className="text-xs text-gray-600">Expires: {permit.expiryDate}</div>
-//                               )}
-//                             </div>
-//                           </div>
-//                           <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">
-//                             Approved
-//                           </span>
-//                         </div>
-//                       ))
-//                     ) : (
-//                       <div className="text-sm text-gray-500 italic text-center py-4">No permits listed</div>
-//                     )}
-//                   </div>
-//                 </div>
-//               </div>
-
-//               {/* Services Section */}
-//               {job.services && job.services.length > 0 && (
-//                 <div className="bg-white border border-gray-300 rounded-3xl p-6 shadow-sm">
-//                   <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-widest">Services</h3>
-//                   <div className="space-y-3">
-//                     {job.services.map((service: any, i: number) => (
-//                       <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-300">
-//                         <div>
-//                           <div className="text-sm font-medium text-gray-900">{service.name || 'Unnamed Service'}</div>
-//                           {service.description && (
-//                             <div className="text-xs text-gray-600 mt-1">{service.description}</div>
-//                           )}
-//                         </div>
-//                         <div className="text-right">
-//                           <div className="text-sm font-bold text-gray-900">
-//                             {service.quantity || 1} × AED {service.unitPrice || 0}
-//                           </div>
-//                           <div className="text-xs font-bold text-emerald-600">
-//                             Total: AED {service.total || 0}
-//                           </div>
-//                         </div>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-//               )}
-//             </>
-//           )}
-
-//           {activeTab === 'pre-execution' && (
-//             <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
-//               <div className="flex items-center justify-between mb-8">
-//                 <h3 className="text-xl font-bold text-gray-900">Pre-Execution Phase</h3>
-//                 <span className="text-xs font-bold text-blue-900 px-3 py-1 bg-blue-100 rounded-full">Preparation Stage</span>
-//               </div>
-
-//               {/* Pre-Execution Checklist */}
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-//                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
-//                   <h4 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
-//                     <ClipboardCheck className="w-5 h-5" />
-//                     Pre-Job Checklist
-//                   </h4>
-//                   <div className="space-y-3">
-//                     {checklistItems.map((check, i) => (
-//                       <label key={check.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-blue-200">
-//                         <input
-//                           type="checkbox"
-//                           checked={check.status}
-//                           onChange={() => handleChecklistChange(i)}
-//                           className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
-//                         />
-//                         <span className="text-sm text-gray-900">{check.item}</span>
-//                       </label>
-//                     ))}
-//                   </div>
-//                 </div>
-
-//                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6">
-//                   <h4 className="text-lg font-bold text-purple-900 mb-4 flex items-center gap-2">
-//                     <Users className="w-5 h-5" />
-//                     Team Readiness
-//                   </h4>
-//                   <div className="space-y-4">
-//                     {teamMembers.map((member, i) => (
-//                       <div key={member.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-purple-200">
-//                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white ${
-//                           member.status === 'Confirmed' ? 'bg-green-600' : 'bg-yellow-600'
-//                         }`}>
-//                           {member.initials}
-//                         </div>
-//                         <div className="flex-1">
-//                           <div className="text-sm font-bold text-gray-900">{member.name}</div>
-//                           <div className="text-xs text-gray-600">{member.role}</div>
-//                         </div>
-//                         <select
-//                           value={member.status}
-//                           onChange={(e) => handleTeamStatusChange(i, e.target.value)}
-//                           className="text-xs font-bold px-2 py-1 rounded-full border cursor-pointer bg-white transition-all hover:border-purple-400"
-//                         >
-//                           <option value="Confirmed">Confirmed</option>
-//                           <option value="Pending">Pending</option>
-//                           <option value="Cancelled">Cancelled</option>
-//                         </select>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-//               </div>
-
-//               {/* Permits & Equipment */}
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-//                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6">
-//                   <h4 className="text-lg font-bold text-green-900 mb-4 flex items-center gap-2">
-//                     <ShieldCheck className="w-5 h-5" />
-//                     Permits & Access
-//                   </h4>
-//                   <div className="space-y-3">
-//                     {job.permits && job.permits.length > 0 ? (
-//                       job.permits.map((permit: any, i: number) => (
-//                         <div key={i} className="flex items-center justify-between p-3 bg-white rounded-xl border border-green-200">
-//                           <div className="flex items-center gap-3">
-//                             <ShieldCheck className="w-4 h-4 text-green-600" />
-//                             <div>
-//                               <div className="text-sm font-medium text-gray-900">
-//                                 {typeof permit === 'string' ? permit : permit.name || 'Permit'}
-//                               </div>
-//                               {permit.expiryDate && (
-//                                 <div className="text-xs text-gray-600">Expires: {permit.expiryDate}</div>
-//                               )}
-//                             </div>
-//                           </div>
-//                           <span className="text-xs font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">
-//                             Approved
-//                           </span>
-//                         </div>
-//                       ))
-//                     ) : (
-//                       <div className="text-sm text-gray-500 italic text-center py-4">No permits listed</div>
-//                     )}
-//                   </div>
-//                 </div>
-
-//                 <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-6">
-//                   <h4 className="text-lg font-bold text-orange-900 mb-4 flex items-center gap-2">
-//                     <Wrench className="w-5 h-5" />
-//                     Equipment Status
-//                   </h4>
-//                   <div className="space-y-3">
-//                     {equipmentStatus.map((equipment, i) => (
-//                       <div key={equipment.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-orange-200">
-//                         <span className="text-sm text-gray-900">{equipment.item}</span>
-//                         <select
-//                           value={equipment.status}
-//                           onChange={(e) => handleEquipmentStatusChange(i, e.target.value)}
-//                           className={`text-xs font-bold px-2 py-1 rounded-full border cursor-pointer transition-all hover:border-orange-400 ${
-//                             equipment.color === 'green' ? 'bg-green-100 text-green-700 border-green-300' :
-//                             equipment.color === 'yellow' ? 'bg-yellow-100 text-yellow-700 border-yellow-300' :
-//                             'bg-red-100 text-red-700 border-red-300'
-//                           }`}
-//                         >
-//                           <option value="Ready">Ready</option>
-//                           <option value="Pending">Pending</option>
-//                           <option value="Not Ready">Not Ready</option>
-//                         </select>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           )}
-
-//           {activeTab === 'execution' && (
-//             <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
-//               <div className="flex items-center justify-between mb-8">
-//                 <h3 className="text-xl font-bold text-gray-900">On-Site Execution</h3>
-//                 <div className="flex items-center gap-2">
-//                   <div className="flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
-//                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-//                     <span className="text-xs font-bold text-green-800">LIVE</span>
-//                   </div>
-//                   <span className="text-xs font-bold text-green-900 px-3 py-1 bg-green-100 rounded-full">In Progress</span>
-//                 </div>
-//               </div>
-              
-//               {/* Execution Progress */}
-//               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-//                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6">
-//                   <div className="flex items-center gap-3 mb-4">
-//                     <CheckSquare className="w-5 h-5 text-green-600" />
-//                     <span className="text-sm font-bold text-green-900">Task Progress</span>
-//                   </div>
-//                   <div className="text-2xl font-bold text-green-900 mb-2">{getTaskProgress()}%</div>
-//                   <div className="w-full bg-green-200 rounded-full h-2 mb-2">
-//                     <div 
-//                       className="bg-green-600 h-2 rounded-full transition-all duration-500" 
-//                       style={{ width: `${getTaskProgress()}%` }}
-//                     ></div>
-//                   </div>
-//                   <div className="text-xs text-green-700">
-//                     {executionTasks.filter(t => t.status === 'completed').length} of {executionTasks.length} tasks completed
-//                   </div>
-//                 </div>
-                
-//                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
-//                   <div className="flex items-center gap-3 mb-4">
-//                     <Clock className="w-5 h-5 text-blue-600" />
-//                     <span className="text-sm font-bold text-blue-900">Time Tracking</span>
-//                   </div>
-//                   <div className="text-2xl font-bold text-blue-900 mb-2">
-//                     {executionTime.elapsedHours}.{String(executionTime.elapsedMinutes).padStart(2, '0')}h
-//                   </div>
-//                   <div className="text-xs text-blue-700 mb-2">
-//                     Elapsed: {executionTime.elapsedHours}h {executionTime.elapsedMinutes}m
-//                   </div>
-//                   <div className="text-xs text-blue-600">
-//                     Estimated completion: {executionTime.estimatedCompletion}h
-//                   </div>
-//                 </div>
-                
-//                 <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-6">
-//                   <div className="flex items-center gap-3 mb-4">
-//                     <Activity className="w-5 h-5 text-orange-600" />
-//                     <span className="text-sm font-bold text-orange-900">Live Updates</span>
-//                   </div>
-//                   <div className="text-xs text-orange-700 mb-2">Last update: {executionTime.lastUpdate || 'No updates'}</div>
-//                   <div className="text-xs text-orange-600">Team: On site, working efficiently</div>
-//                 </div>
-//               </div>
-
-//               {/* Current Tasks & Image Documentation */}
-//               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-//                 <div className="bg-white border border-gray-300 rounded-2xl p-6">
-//                   <h4 className="text-lg font-bold text-gray-900 mb-4">Current Tasks</h4>
-//                   <div className="space-y-3">
-//                     {executionTasks.map((task, i) => (
-//                       <div key={task.id} className="border border-gray-200 rounded-xl p-4">
-//                         <div className="flex items-center gap-3 mb-3">
-//                           <select
-//                             value={task.status}
-//                             onChange={(e) => handleTaskStatusChange(i, e.target.value)}
-//                             className={`text-xs font-bold px-2 py-1 rounded-full border cursor-pointer transition-all ${
-//                               task.status === 'completed' ? 'bg-green-100 text-green-700 border-green-300' :
-//                               task.status === 'in-progress' ? 'bg-blue-100 text-blue-700 border-blue-300' :
-//                               'bg-gray-100 text-gray-700 border-gray-300'
-//                             }`}
-//                           >
-//                             <option value="pending">Pending</option>
-//                             <option value="in-progress">In Progress</option>
-//                             <option value="completed">Completed</option>
-//                           </select>
-//                           <span className="flex-1 text-sm font-medium text-gray-900">{task.task}</span>
-//                           <button
-//                             onClick={() => {
-//                               setSelectedTaskForReminder(task);
-//                               setReminderTime('08:00');
-//                               setShowReminderModal(true);
-//                             }}
-//                             className={`px-2 py-1 text-xs rounded-lg font-bold transition-all ${
-//                               task.reminder ? 'bg-amber-100 text-amber-700 border border-amber-300' : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-amber-50'
-//                             }`}
-//                           >
-//                             🔔 {task.reminder ? 'Remind' : 'Set'}
-//                           </button>
-//                         </div>
-//                         <div className="flex items-center gap-3">
-//                           <input
-//                             type="range"
-//                             min="0"
-//                             max="100"
-//                             value={task.progress}
-//                             onChange={(e) => handleTaskProgressChange(i, parseInt(e.target.value))}
-//                             className="flex-1 cursor-pointer"
-//                           />
-//                           <span className="text-xs font-bold text-gray-600 w-8 text-right">{task.progress}%</span>
-//                         </div>
-//                         {task.reminder && (
-//                           <div className="mt-2 flex items-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
-//                             <Clock className="w-3 h-3 text-amber-600" />
-//                             <span className="text-xs text-amber-700 font-medium">Reminder at {task.reminder.time}</span>
-//                             <button
-//                               onClick={() => handleToggleTaskReminder(i)}
-//                               className="ml-auto text-xs text-amber-600 hover:text-amber-700 font-bold"
-//                             >
-//                               {task.reminder.enabled ? '✓ On' : '✗ Off'}
-//                             </button>
-//                             <button
-//                               onClick={() => handleRemoveTaskReminder(i)}
-//                               className="text-xs text-gray-500 hover:text-gray-700 font-bold"
-//                             >
-//                               ✕
-//                             </button>
-//                           </div>
-//                         )}
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-
-//                 <div className="bg-white border border-gray-300 rounded-2xl p-6">
-//                   <h4 className="text-lg font-bold text-gray-900 mb-4">Image Documentation</h4>
-//                   <div className="grid grid-cols-2 gap-3 mb-4">
-//                     {['Before', 'In Progress', 'After'].map((stage) => (
-//                       <button
-//                         key={stage}
-//                         onClick={() => handleUploadPhoto(stage)}
-//                         className="aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-blue-500 hover:bg-blue-50 transition-all"
-//                       >
-//                         <div className="text-center">
-//                           <Camera className="h-6 w-6 text-gray-400 mx-auto mb-1" />
-//                           <p className="text-xs text-gray-500">{stage}</p>
-//                         </div>
-//                       </button>
-//                     ))}
-//                     <button
-//                       onClick={() => document.getElementById('photo-input')?.click()}
-//                       className="aspect-square bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center hover:bg-blue-100 transition-all"
-//                     >
-//                       <div className="text-center">
-//                         <Plus className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-//                         <p className="text-xs text-blue-600">Add Photo</p>
-//                       </div>
-//                     </button>
-//                     <input
-//                       id="photo-input"
-//                       type="file"
-//                       accept="image/*"
-//                       onChange={(e) => {
-//                         if (e.target.files?.[0]) {
-//                           handleUploadPhoto('Custom')
-//                         }
-//                       }}
-//                       className="hidden"
-//                     />
-//                   </div>
-//                   <div className="space-y-2 max-h-48 overflow-y-auto">
-//                     {executionPhotos.map((photo) => (
-//                       <div key={photo.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-xs">
-//                         <span className="font-medium text-gray-700">{photo.stage}</span>
-//                         <span className="text-gray-500">{photo.uploadedAt}</span>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-//               </div>
-
-//               {/* Execution Notes */}
-//               <div className="bg-white border border-gray-300 rounded-2xl p-6 mt-6">
-//                 <h4 className="text-lg font-bold text-gray-900 mb-4">Execution Notes</h4>
-//                 <textarea
-//                   value={executionNotes}
-//                   onChange={(e) => setExecutionNotes(e.target.value)}
-//                   className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-//                   placeholder="Add real-time notes about job execution..."
-//                 ></textarea>
-//                 <div className="flex justify-end mt-3">
-//                   <button
-//                     onClick={handleSaveExecutionNotes}
-//                     className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all disabled:bg-gray-400"
-//                     disabled={!executionNotes.trim()}
-//                   >
-//                     Save Notes
-//                   </button>
-//                 </div>
-//               </div>
-//             </div>
-//           )}
-
-//           {activeTab === 'notes' && (
-//             <div className="space-y-6">
-//               <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
-//                 <div className="flex items-center justify-between mb-8">
-//                   <h3 className="text-xl font-bold text-gray-900">Job Notes & Reminders</h3>
-//                   <button
-//                     onClick={() => setShowJobNoteModal(true)}
-//                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all"
-//                   >
-//                     <Plus className="w-4 h-4" />
-//                     <span>Add Note</span>
-//                   </button>
-//                 </div>
-
-//                 {/* Notes */}
-//                 <div className="mb-8">
-//                   <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-//                     <MessageSquare className="w-5 h-5 text-blue-600" />
-//                     Notes
-//                   </h4>
-//                   <div className="space-y-3">
-//                     {jobNotes.map((note, i) => (
-//                       <div key={note.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5">
-//                         <div className="flex items-start justify-between mb-2">
-//                           <div>
-//                             <div className="text-sm text-gray-900">{note.text}</div>
-//                             <div className="text-xs text-gray-600 mt-2">{note.author} • {note.timestamp}</div>
-//                           </div>
-//                           <button
-//                             onClick={() => handleRemoveJobNote(i)}
-//                             className="text-gray-400 hover:text-red-600 transition-all"
-//                           >
-//                             <X className="w-4 h-4" />
-//                           </button>
-//                         </div>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-
-//                 {/* Reminders */}
-//                 <div>
-//                   <div className="flex items-center justify-between mb-4">
-//                     <h4 className="font-bold text-gray-900 flex items-center gap-2">
-//                       <Bell className="w-5 h-5 text-amber-600" />
-//                       Reminders
-//                     </h4>
-//                     <button
-//                       onClick={() => setShowReminderModal(true)}
-//                       className="flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-bold hover:bg-amber-200 transition-all"
-//                     >
-//                       <Plus className="w-3 h-3" />
-//                       Add Reminder
-//                     </button>
-//                   </div>
-//                   <div className="space-y-3">
-//                     {jobReminders.map((reminder, i) => (
-//                       <div key={reminder.id} className="flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5">
-//                         <div className="flex items-center gap-4">
-//                           <input
-//                             type="checkbox"
-//                             checked={reminder.enabled}
-//                             onChange={() => handleToggleReminder(i)}
-//                             className="rounded border-amber-300 text-amber-600"
-//                           />
-//                           <div>
-//                             <div className="text-sm font-medium text-gray-900">{reminder.text}</div>
-//                             <div className="text-xs text-gray-600 mt-1">Remind at {reminder.remindAt}</div>
-//                           </div>
-//                         </div>
-//                         <button
-//                           onClick={() => handleRemoveReminder(i)}
-//                           className="text-gray-400 hover:text-red-600 transition-all"
-//                         >
-//                           <X className="w-4 h-4" />
-//                         </button>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           )}
-
-//           {activeTab === 'tasks' && (
-//             <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
-//               <div className="flex items-center justify-between mb-8">
-//                 <h3 className="text-xl font-bold text-gray-900">Task Assignment</h3>
-//                 <button
-//                   onClick={() => { setSelectedTask(null); setShowTaskAssignmentModal(true) }}
-//                   className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-all"
-//                 >
-//                   <Plus className="w-4 h-4" />
-//                   <span>Reassign Task</span>
-//                 </button>
-//               </div>
-
-//               <div className="space-y-4">
-//                 {taskAssignments.map((assignment, idx) => (
-//                   <div key={assignment.id} className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6">
-//                     <div className="flex items-start justify-between mb-4">
-//                       <div className="flex-1">
-//                         <h4 className="font-bold text-gray-900 mb-2">{assignment.taskName}</h4>
-//                         <div className="flex items-center gap-4 text-sm">
-//                           <div className="flex items-center gap-2">
-//                             <Users className="w-4 h-4 text-gray-600" />
-//                             <span className="text-gray-700">{assignment.assignedTo}</span>
-//                           </div>
-//                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-//                             assignment.status === 'completed' ? 'bg-emerald-200 text-emerald-800' :
-//                             assignment.status === 'in-progress' ? 'bg-blue-200 text-blue-800' : 'bg-yellow-200 text-yellow-800'
-//                           }`}>
-//                             {assignment.status.replace('-', ' ').toUpperCase()}
-//                           </span>
-//                         </div>
-//                       </div>
-//                       <button
-//                         onClick={() => {
-//                           setSelectedTask(assignment);
-//                           setSelectedTeamMember(assignment.assignedTo);
-//                           setShowTaskAssignmentModal(true);
-//                         }}
-//                         className="px-3 py-1 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all text-xs font-bold text-gray-700"
-//                       >
-//                         Change Assignment
-//                       </button>
-//                     </div>
-//                   </div>
-//                 ))}
-//               </div>
-//             </div>
-//           )}
-
-//           {activeTab === 'team' && (
-//             <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
-//               <h3 className="text-xl font-bold text-gray-900 mb-8">Team Member Management</h3>
-//               <div className="space-y-5">
-//                 {taskAssignments.map((assignment, idx) => (
-//                   <div key={assignment.id} className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6">
-//                     <div className="flex items-start justify-between mb-4">
-//                       <div>
-//                         <h4 className="font-bold text-gray-900 mb-1">{assignment.taskName}</h4>
-//                         <div className="text-sm text-gray-700 mb-3">Currently assigned to: <span className="font-bold">{assignment.assignedTo}</span></div>
-//                       </div>
-//                     </div>
-//                     <div className="flex items-center gap-2">
-//                       <select
-//                         value={assignment.assignedTo}
-//                         onChange={(e) => handleReassignTeamMember(idx, e.target.value)}
-//                         className="flex-1 px-4 py-2 border border-purple-300 rounded-lg bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
-//                       >
-//                         <option value="">Select a team member...</option>
-//                         {teamMembers.map((member) => (
-//                           <option key={member.id} value={member.name}>
-//                             {member.name} ({member.role})
-//                           </option>
-//                         ))}
-//                       </select>
-//                       <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all font-medium">
-//                         Replace Duty
-//                       </button>
-//                     </div>
-//                   </div>
-//                 ))}
-//               </div>
-//             </div>
-//           )}
-
-//           {activeTab === 'compensation' && (
-//             <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
-//               <h3 className="text-xl font-bold text-gray-900 mb-8 flex items-center gap-2">
-//                 <DollarSign className="w-6 h-6 text-green-600" />
-//                 Team Compensation Analysis
-//               </h3>
-
-//               {/* Summary Cards */}
-//               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-//                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6">
-//                   <div className="text-sm font-medium text-green-700 mb-1">Total Job Cost</div>
-//                   <div className="text-3xl font-bold text-green-900">
-//                     AED {teamMembers.reduce((sum, m) => sum + m.totalCompensation, 0).toLocaleString()}
-//                   </div>
-//                   <div className="text-xs text-green-600 mt-2">{teamMembers.length} team members</div>
-//                 </div>
-//                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
-//                   <div className="text-sm font-medium text-blue-700 mb-1">Average Rate/Hour</div>
-//                   <div className="text-3xl font-bold text-blue-900">
-//                     AED {Math.round(teamMembers.reduce((sum, m) => sum + m.hourlyRate, 0) / teamMembers.length)}
-//                   </div>
-//                   <div className="text-xs text-blue-600 mt-2">Across all roles</div>
-//                 </div>
-//                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6">
-//                   <div className="text-sm font-medium text-purple-700 mb-1">Total Estimated Hours</div>
-//                   <div className="text-3xl font-bold text-purple-900">
-//                     {teamMembers.reduce((sum, m) => sum + m.estimatedHours, 0)} hrs
-//                   </div>
-//                   <div className="text-xs text-purple-600 mt-2">Project duration</div>
-//                 </div>
-//               </div>
-
-//               {/* Detailed Table */}
-//               <div className="overflow-x-auto">
-//                 <table className="w-full">
-//                   <thead className="border-b border-gray-300">
-//                     <tr>
-//                       <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Team Member</th>
-//                       <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Role</th>
-//                       <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Hourly Rate</th>
-//                       <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Est. Hours</th>
-//                       <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Total Cost</th>
-//                       <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Status</th>
-//                     </tr>
-//                   </thead>
-//                   <tbody>
-//                     {teamMembers.map((member) => (
-//                       <tr key={member.id} className="hover:bg-gray-50 transition-all border-b border-gray-200">
-//                         <td className="px-4 py-4 text-sm font-medium text-gray-900">{member.name}</td>
-//                         <td className="px-4 py-4 text-sm text-gray-600">{member.role}</td>
-//                         <td className="px-4 py-4 text-sm font-bold text-gray-900">AED {member.hourlyRate}</td>
-//                         <td className="px-4 py-4 text-sm text-gray-600">{member.estimatedHours}h</td>
-//                         <td className="px-4 py-4 text-sm font-bold text-green-600">AED {member.totalCompensation}</td>
-//                         <td className="px-4 py-4">
-//                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-//                             member.status === 'Confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-//                           }`}>
-//                             {member.status}
-//                           </span>
-//                         </td>
-//                       </tr>
-//                     ))}
-//                   </tbody>
-//                 </table>
-//               </div>
-//             </div>
-//           )}
-
-//           {activeTab === 'feedback' && (
-//             <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
-//               <h3 className="text-xl font-bold text-gray-900 mb-8 flex items-center gap-2">
-//                 <Star className="w-6 h-6 text-yellow-600" />
-//                 Employee Feedback & Reviews
-//               </h3>
-
-//               <div className="space-y-6">
-//                 {employeeFeedback.map((feedback) => (
-//                   <div key={feedback.id} className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-2xl p-6">
-//                     <div className="flex items-start justify-between mb-4">
-//                       <div>
-//                         <h4 className="font-bold text-gray-900 text-lg">{feedback.employee}</h4>
-//                         <div className="flex items-center gap-2 mt-2">
-//                           <div className="flex items-center gap-1">
-//                             {[...Array(5)].map((_, i) => (
-//                               <Star
-//                                 key={i}
-//                                 className={`w-4 h-4 ${
-//                                   i < feedback.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-//                                 }`}
-//                               />
-//                             ))}
-//                           </div>
-//                           <span className="text-sm font-bold text-gray-700">{feedback.rating}.0/5.0</span>
-//                         </div>
-//                       </div>
-//                       <div className="text-right">
-//                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-//                           feedback.category === 'performance' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-//                         }`}>
-//                           {feedback.category.charAt(0).toUpperCase() + feedback.category.slice(1)}
-//                         </span>
-//                         <div className="text-xs text-gray-600 mt-2">{feedback.date}</div>
-//                       </div>
-//                     </div>
-//                     <p className="text-gray-700 text-sm leading-relaxed">{feedback.feedback}</p>
-//                   </div>
-//                 ))}
-//               </div>
-//             </div>
-//           )}
-//         </div>
-
-//         {/* Sidebar: Team & History */}
-//         <div className="lg:col-span-4 space-y-6">
-//           {/* Enhanced Team Section with Real-time Status */}
-//           <div className="bg-white border border-gray-300 rounded-3xl p-6 shadow-sm">
-//             <div className="flex items-center justify-between mb-6">
-//               <h3 className="font-bold text-gray-900 flex items-center gap-2">
-//                 <Users className="w-4 h-4 text-gray-500" />
-//                 Team Status
-//               </h3>
-//               <div className="flex items-center gap-2">
-//                 <div className="flex items-center gap-1">
-//                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-//                   <span className="text-xs font-medium text-gray-600">
-//                     {teamMembers.filter(m => m.status === 'Confirmed').length}/{teamMembers.length} Active
-//                   </span>
-//                 </div>
-//               </div>
-//             </div>
-//             <div className="space-y-4">
-//               {teamMembers.map((member) => (
-//                 <div key={member.id} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-300 hover:bg-gray-100 transition-all">
-//                   <div className="relative">
-//                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold text-white ${
-//                       member.status === 'Confirmed' ? 'bg-green-600' :
-//                       member.status === 'Pending' ? 'bg-yellow-600' : 'bg-gray-600'
-//                     }`}>
-//                       {member.initials}
-//                     </div>
-//                     {member.status === 'Confirmed' && (
-//                       <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-//                         <CheckCircle className="w-2.5 h-2.5 text-white" />
-//                       </div>
-//                     )}
-//                   </div>
-//                   <div className="flex-1">
-//                     <div className="flex items-center gap-2 mb-1">
-//                       <div className="text-sm font-bold text-gray-900">{member.name}</div>
-//                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-//                         member.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
-//                         member.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'
-//                       }`}>
-//                         {member.status}
-//                       </span>
-//                     </div>
-//                     <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">{member.role}</div>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-
-//           {/* History Timeline */}
-//           <div className="bg-white border border-gray-300 rounded-3xl p-6 shadow-sm">
-//             <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
-//               <History className="w-4 h-4 text-gray-500" />
-//               Activity Log
-//             </h3>
-//             <div className="space-y-6 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-px before:bg-gray-300">
-//               {activityLog.map((event, i) => (
-//                 <div key={i} className="relative pl-10">
-//                   <div className="absolute left-3 top-1.5 w-2 h-2 rounded-full bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.3)]" />
-//                   <div className="text-xs font-bold text-gray-900 mb-1">{event.action}</div>
-//                   <div className="text-[10px] text-gray-600 mb-1">
-//                     {new Date(event.timestamp).toLocaleDateString()} • {event.user}
-//                   </div>
-//                   <div className="text-[10px] text-gray-500 italic">{event.details}</div>
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Status Update Modal */}
-//       {showStatusModal && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-//           <div className="bg-white rounded-3xl p-8 max-w-md w-full">
-//             <div className="flex items-center justify-between mb-6">
-//               <h3 className="text-xl font-bold text-gray-900">Update Job Status</h3>
-//               <button
-//                 onClick={() => setShowStatusModal(false)}
-//                 className="p-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all"
-//               >
-//                 <X className="w-5 h-5 text-gray-600" />
-//               </button>
-//             </div>
-//             <div className="space-y-4">
-//               {[
-//                 { status: 'Pending', label: 'Mark as Pending', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-//                 { status: 'Scheduled', label: 'Mark as Scheduled', color: 'bg-indigo-100 text-indigo-700', icon: Calendar },
-//                 { status: 'In Progress', label: 'Mark as In Progress', color: 'bg-green-100 text-green-700', icon: PlayCircle },
-//                 { status: 'Completed', label: 'Mark as Completed', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle },
-//                 { status: 'Cancelled', label: 'Cancel Job', color: 'bg-red-100 text-red-700', icon: X }
-//               ].map((option) => (
-//                 <button
-//                   key={option.status}
-//                   onClick={() => handleUpdateJobStatus(option.status)}
-//                   className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-3 ${
-//                     job.status === option.status
-//                       ? 'border-indigo-400 bg-indigo-50'
-//                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-//                   }`}
-//                 >
-//                   <div className={`p-2 rounded-lg ${option.color.split(' ')[0]}`}>
-//                     <option.icon className={`w-4 h-4 ${option.color.split(' ')[1]}`} />
-//                   </div>
-//                   <span className="font-bold text-gray-900">{option.label}</span>
-//                   {job.status === option.status && <CheckCircle className="w-4 h-4 text-indigo-600 ml-auto" />}
-//                 </button>
-//               ))}
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Add Job Note Modal */}
-//       {showJobNoteModal && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-//           <div className="bg-white rounded-3xl p-8 max-w-lg w-full">
-//             <div className="flex items-center justify-between mb-6">
-//               <h3 className="text-xl font-bold text-gray-900">Add Job Note</h3>
-//               <button
-//                 onClick={() => setShowJobNoteModal(false)}
-//                 className="p-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all"
-//               >
-//                 <X className="w-5 h-5 text-gray-600" />
-//               </button>
-//             </div>
-//             <div className="space-y-4">
-//               <textarea
-//                 value={newJobNote}
-//                 onChange={(e) => setNewJobNote(e.target.value)}
-//                 placeholder="Enter your note..."
-//                 className="w-full h-32 p-4 border border-gray-300 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-//               />
-//               <div className="flex items-center gap-3">
-//                 <button
-//                   onClick={() => setShowJobNoteModal(false)}
-//                   className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all"
-//                 >
-//                   Cancel
-//                 </button>
-//                 <button
-//                   onClick={handleAddJobNote}
-//                   className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all"
-//                 >
-//                   Add Note
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Task Assignment Modal */}
-//       {showTaskAssignmentModal && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-//           <div className="bg-white rounded-3xl p-8 max-w-lg w-full">
-//             <div className="flex items-center justify-between mb-6">
-//               <h3 className="text-xl font-bold text-gray-900">Assign Task</h3>
-//               <button
-//                 onClick={() => {
-//                   setShowTaskAssignmentModal(false);
-//                   setSelectedTask(null);
-//                 }}
-//                 className="p-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all"
-//               >
-//                 <X className="w-5 h-5 text-gray-600" />
-//               </button>
-//             </div>
-//             <div className="space-y-6">
-//               <div>
-//                 <label className="block text-sm font-bold text-gray-700 mb-2">Select Task</label>
-//                 <select
-//                   value={selectedTask?.id || ''}
-//                   onChange={(e) => {
-//                     const task = executionTasks.find(t => t.id === e.target.value);
-//                     setSelectedTask(task);
-//                   }}
-//                   className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-//                 >
-//                   <option value="">Choose a task...</option>
-//                   {executionTasks.map((task) => (
-//                     <option key={task.id} value={task.id}>
-//                       {task.task}
-//                     </option>
-//                   ))}
-//                 </select>
-//               </div>
-
-//               <div>
-//                 <label className="block text-sm font-bold text-gray-700 mb-2">Assign to Team Member</label>
-//                 <select
-//                   value={selectedTeamMember}
-//                   onChange={(e) => setSelectedTeamMember(e.target.value)}
-//                   className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-//                 >
-//                   <option value="">Choose a team member...</option>
-//                   {teamMembers.map((member) => (
-//                     <option key={member.id} value={member.name}>
-//                       {member.name} ({member.role})
-//                     </option>
-//                   ))}
-//                 </select>
-//               </div>
-
-//               <div className="flex items-center gap-3">
-//                 <button
-//                   onClick={() => {
-//                     setShowTaskAssignmentModal(false);
-//                     setSelectedTask(null);
-//                   }}
-//                   className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all"
-//                 >
-//                   Cancel
-//                 </button>
-//                 <button
-//                   onClick={handleAssignTask}
-//                   className="flex-1 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all"
-//                 >
-//                   Assign Task
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Reminder Modal */}
-//       {showReminderModal && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-//           <div className="bg-white rounded-3xl p-8 max-w-lg w-full">
-//             <div className="flex items-center justify-between mb-6">
-//               <h3 className="text-xl font-bold text-gray-900">
-//                 {selectedTaskForReminder ? 'Set Task Reminder' : 'Add Reminder'}
-//               </h3>
-//               <button
-//                 onClick={() => {
-//                   setShowReminderModal(false);
-//                   setSelectedTaskForReminder(null);
-//                 }}
-//                 className="p-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all"
-//               >
-//                 <X className="w-5 h-5 text-gray-600" />
-//               </button>
-//             </div>
-//             <div className="space-y-6">
-//               {selectedTaskForReminder ? (
-//                 <>
-//                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-//                     <div className="text-sm font-medium text-blue-900">Task</div>
-//                     <div className="text-sm font-bold text-gray-900 mt-1">{selectedTaskForReminder.task}</div>
-//                   </div>
-//                   <div>
-//                     <label className="block text-sm font-bold text-gray-700 mb-2">Reminder Time</label>
-//                     <input
-//                       type="time"
-//                       value={reminderTime}
-//                       onChange={(e) => setReminderTime(e.target.value)}
-//                       className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
-//                     />
-//                   </div>
-//                   <div className="flex items-center gap-3">
-//                     <button
-//                       onClick={() => {
-//                         setShowReminderModal(false);
-//                         setSelectedTaskForReminder(null);
-//                       }}
-//                       className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all"
-//                     >
-//                       Cancel
-//                     </button>
-//                     <button
-//                       onClick={() => {
-//                         const index = executionTasks.findIndex(t => t.id === selectedTaskForReminder.id);
-//                         handleAddTaskReminder(index);
-//                       }}
-//                       className="flex-1 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all"
-//                     >
-//                       Set Reminder
-//                     </button>
-//                   </div>
-//                 </>
-//               ) : (
-//                 <>
-//                   <div>
-//                     <label className="block text-sm font-bold text-gray-700 mb-2">Reminder Message</label>
-//                     <textarea
-//                       value={reminderText}
-//                       onChange={(e) => setReminderText(e.target.value)}
-//                       placeholder="What should you be reminded about?"
-//                       className="w-full h-24 p-4 border border-gray-300 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-amber-500"
-//                     />
-//                   </div>
-
-//                   <div>
-//                     <label className="block text-sm font-bold text-gray-700 mb-2">Reminder Time</label>
-//                     <input
-//                       type="time"
-//                       value={reminderTime}
-//                       onChange={(e) => setReminderTime(e.target.value)}
-//                       className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
-//                     />
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <button
-//                       onClick={() => setShowReminderModal(false)}
-//                       className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all"
-//                     >
-//                       Cancel
-//                     </button>
-//                     <button
-//                       onClick={handleAddReminder}
-//                       className="flex-1 px-6 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all"
-//                     >
-//                       Create Reminder
-//                     </button>
-//                   </div>
-//                 </>
-//               )}
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   )
-// }
-
-// new code
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -1981,6 +8,7 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
+  User,
   MapPin,
   Users,
   Tag,
@@ -2030,6 +58,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { 
   collection, 
   query, 
@@ -2058,6 +88,8 @@ export default function JobDetailPage() {
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [notesText, setNotesText] = useState('')
   const [checklistItems, setChecklistItems] = useState<any[]>([])
+  const [jobCompleted, setJobCompleted] = useState(false)
+
   const [equipmentStatus, setEquipmentStatus] = useState<any[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [activityLog, setActivityLog] = useState<any[]>([])
@@ -2071,6 +103,15 @@ export default function JobDetailPage() {
   const [executionNotes, setExecutionNotes] = useState('')
   const [executionPhotos, setExecutionPhotos] = useState<any[]>([])
   const [jobNotes, setJobNotes] = useState<any[]>([])
+ const [showMilestoneForm, setShowMilestoneForm] = useState(false)
+const [milestoneDescription, setMilestoneDescription] = useState('')
+const [milestoneStatus, setMilestoneStatus] = useState('')
+const [milestones, setMilestones] = useState<Array<{
+  id: string;
+  description: string;
+  status: string;
+  createdAt: string;
+}>>([])
   const [newJobNote, setNewJobNote] = useState('')
   const [taskAssignments, setTaskAssignments] = useState<any[]>([])
   const [jobReminders, setJobReminders] = useState<any[]>([])
@@ -2580,6 +621,80 @@ export default function JobDetailPage() {
     }
   }
 
+  // Load milestones from Firebase when component mounts
+useEffect(() => {
+  const loadMilestones = async () => {
+    if (jobId && job?.milestones) {
+      setMilestones(job.milestones || [])
+    }
+  }
+  loadMilestones()
+}, [jobId, job])
+
+// Add milestone to Firebase
+const handleAddMilestoneToFirebase = async () => {
+  if (milestoneDescription && milestoneStatus) {
+    try {
+      const newMilestone = {
+        id: `milestone-${Date.now()}`,
+        description: milestoneDescription,
+        status: milestoneStatus,
+        createdAt: new Date().toISOString()
+      }
+
+      // Update local state
+      const updatedMilestones = [...milestones, newMilestone]
+      setMilestones(updatedMilestones)
+
+      // Update Firebase
+      const jobRef = doc(db, 'jobs', jobId)
+      await updateDoc(jobRef, {
+        milestones: updatedMilestones,
+        updatedAt: Timestamp.fromDate(new Date())
+      })
+
+      // Reset form
+      setMilestoneDescription('')
+      setMilestoneStatus('')
+      setShowMilestoneForm(false)
+
+      // Add to activity log
+      addActivityLog('Milestone Added', `New milestone: ${milestoneDescription} (${milestoneStatus})`)
+
+      alert('Milestone added and saved to Firebase!')
+    } catch (error) {
+      console.error('Error adding milestone:', error)
+      alert('Error adding milestone to Firebase')
+    }
+  }
+}
+
+// Delete milestone from Firebase
+const handleDeleteMilestone = async (milestoneId: string) => {
+  if (confirm('Are you sure you want to delete this milestone?')) {
+    try {
+      const updatedMilestones = milestones.filter(m => m.id !== milestoneId)
+      
+      // Update local state
+      setMilestones(updatedMilestones)
+
+      // Update Firebase
+      const jobRef = doc(db, 'jobs', jobId)
+      await updateDoc(jobRef, {
+        milestones: updatedMilestones,
+        updatedAt: Timestamp.fromDate(new Date())
+      })
+
+      addActivityLog('Milestone Deleted', `Milestone removed`)
+
+      alert('Milestone deleted from Firebase!')
+    } catch (error) {
+      console.error('Error deleting milestone:', error)
+      alert('Error deleting milestone from Firebase')
+    }
+  }
+}
+
   // ========== NEW: SAVE REMINDERS SECTION ==========
   const saveRemindersSection = async () => {
     try {
@@ -3022,6 +1137,7 @@ export default function JobDetailPage() {
 
   // ========== COMPLETE JOB FUNCTION ==========
   const handleCompleteJob = async () => {
+     setJobCompleted(true)
     try {
       await handleUpdateJobStatus('Completed')
     } catch (error) {
@@ -3255,6 +1371,594 @@ export default function JobDetailPage() {
   }
 
   const progressMetrics = calculateProgressMetrics()
+
+  // PDF Download Function
+
+  // PDF Download Function - COMPLETE WITH ALL DETAILS
+
+  // PDF Download Function - ULTIMATE FIX
+const downloadJobPDF = () => {
+  const doc = new jsPDF();
+  let yPosition = 20;
+  
+  // ========== HEADER SECTION ==========
+  // Company Header
+  doc.setFontSize(22);
+  doc.setTextColor(0, 102, 204);
+  doc.text('CleanCorp Services LLC', 14, yPosition);
+  
+  yPosition += 8;
+  doc.setFontSize(14);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Job Completion Report & Final Invoice', 14, yPosition);
+  
+  yPosition += 8;
+  doc.setFontSize(10);
+  doc.setTextColor(80, 80, 80);
+  doc.text(`Report ID: ${String(job.id?.substring(0, 8).toUpperCase() || 'N/A')}`, 14, yPosition);
+  
+  yPosition += 6;
+  doc.text(`Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, yPosition);
+  
+  yPosition += 6;
+  doc.text(`Completed: ${job.completedAt ? new Date(job.completedAt).toLocaleDateString() : 'N/A'}`, 14, yPosition);
+  
+  // Line
+  yPosition += 8;
+  doc.setDrawColor(200, 200, 200);
+  doc.line(14, yPosition, 196, yPosition);
+  yPosition += 8;
+  
+  // ========== CLIENT & JOB BASIC INFO ==========
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.text('1. CLIENT INFORMATION', 14, yPosition);
+  
+  yPosition += 8;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  
+  // Left column
+  doc.text(`Client Name: ${String(job.client || 'N/A')}`, 14, yPosition);
+  yPosition += 6;
+  doc.text(`Client ID: ${String(job.clientId || 'N/A')}`, 14, yPosition);
+  yPosition += 6;
+  doc.text(`Location: ${String(job.location || 'N/A')}`, 14, yPosition);
+  yPosition += 6;
+  doc.text(`Description: ${String(job.description || 'N/A')}`, 14, yPosition);
+  
+  // Right column (reset y for right side)
+  let rightY = yPosition - 24;
+  doc.text(`Job Title: ${String(job.title || 'N/A')}`, 120, rightY);
+  rightY += 6;
+  doc.text(`Priority: ${String(job.priority || 'N/A')}`, 120, rightY);
+  rightY += 6;
+  doc.text(`Risk Level: ${String(job.riskLevel || 'N/A')}`, 120, rightY);
+  rightY += 6;
+  doc.text(`Status: ${String(job.status || 'N/A')}`, 120, rightY);
+  
+  yPosition += 8;
+  
+  // Line
+  doc.setDrawColor(200, 200, 200);
+  doc.line(14, yPosition, 196, yPosition);
+  yPosition += 8;
+  
+  // ========== JOB SPECIFICATIONS ==========
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.text('2. JOB SPECIFICATIONS', 14, yPosition);
+  
+  yPosition += 8;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  
+  // Grid layout for job specs - FIXED: All values converted to strings
+  const specs = [
+    ['Scheduled Date:', String(job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString() : 'N/A')],
+    ['Estimated Duration:', String(`${job.estimatedDuration || 'N/A'} hours`)],
+    ['Team Required:', String(`${job.teamRequired || 0} members`)],
+    ['Recurring:', String(job.recurring ? 'Yes' : 'No')],
+    ['SLA Deadline:', String(job.slaDeadline ? new Date(job.slaDeadline).toLocaleDateString() : 'N/A')],
+    ['End Time:', String(job.endTime || 'N/A')],
+    ['Overtime Required:', String(job.overtimeRequired ? 'Yes' : 'No')],
+    ['Overtime Hours:', String(job.overtimeHours || 0)],
+    ['Overtime Approved:', String(job.overtimeApproved ? 'Yes' : 'No')],
+    ['Overtime Reason:', String(job.overtimeReason || 'N/A')]
+  ];
+  
+  let col1Y = yPosition;
+  let col2Y = yPosition;
+  
+  specs.forEach((spec, index) => {
+    if (index < 5) {
+      doc.text(String(spec[0]), 14, col1Y);
+      doc.text(String(spec[1]), 70, col1Y);
+      col1Y += 6;
+    } else {
+      doc.text(String(spec[0]), 120, col2Y);
+      doc.text(String(spec[1]), 170, col2Y);
+      col2Y += 6;
+    }
+  });
+  
+  yPosition = Math.max(col1Y, col2Y) + 4;
+  
+  // Line
+  doc.setDrawColor(200, 200, 200);
+  doc.line(14, yPosition, 196, yPosition);
+  yPosition += 8;
+  
+  // ========== TEAM MEMBERS ==========
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.text('3. ASSIGNED TEAM MEMBERS', 14, yPosition);
+  
+  yPosition += 8;
+  
+  if (job.assignedEmployees && job.assignedEmployees.length > 0) {
+    const teamData = job.assignedEmployees.map((emp: any) => [
+      String(emp.name || 'N/A'),
+      String(emp.email || 'N/A'),
+      String(emp.id?.substring(0, 8) || 'N/A')
+    ]);
+    
+    autoTable(doc, {
+      startY: yPosition,
+      head: [['Name', 'Email', 'Employee ID']],
+      body: teamData,
+      theme: 'striped',
+      headStyles: { fillColor: [102, 102, 255] },
+      margin: { left: 14, right: 14 },
+    });
+    
+    yPosition = (doc as any).lastAutoTable.finalY + 8;
+  } else {
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text('No team members assigned', 14, yPosition);
+    yPosition += 12;
+  }
+  
+  // ========== TASKS ==========
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.text('4. TASKS', 14, yPosition);
+  
+  yPosition += 8;
+  
+  // FIXED: Get tasks from job object
+  const tasksList = job.tasks || [];
+  console.log('📋 Tasks found:', tasksList.length);
+  
+  if (tasksList.length > 0) {
+    const taskData = tasksList.map((task: any) => [
+      String(task.title || 'Unnamed Task'),
+      String(task.description?.substring(0, 30) || 'N/A'),
+      task.completed ? '✅ Completed' : '⏳ Pending',
+      task.duration ? `${String(task.duration)}h` : 'N/A',
+      task.progress !== undefined ? `${String(task.progress)}%` : 'N/A'
+    ]);
+    
+    autoTable(doc, {
+      startY: yPosition,
+      head: [['Task', 'Description', 'Status', 'Duration', 'Progress']],
+      body: taskData,
+      theme: 'striped',
+      headStyles: { fillColor: [0, 153, 76] },
+      margin: { left: 14, right: 14 },
+    });
+    
+    yPosition = (doc as any).lastAutoTable.finalY + 8;
+  } else {
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text('No tasks found for this job', 14, yPosition);
+    yPosition += 12;
+  }
+  
+  // ========== MILESTONES - ULTIMATE FIX ==========
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.text('5. PROJECT MILESTONES', 14, yPosition);
+  
+  yPosition += 8;
+  
+  // ULTIMATE FIX: Try EVERY possible way to get milestones
+  let milestonesList: any[] = [];
+  
+  // 1. Direct access (your code)
+  if (job?.milestones && Array.isArray(job.milestones)) {
+    milestonesList = job.milestones;
+    console.log('✅ Found via job.milestones:', milestonesList.length);
+  }
+  // 2. Access via job.data (Firebase document format)
+  else if (job?.data?.milestones && Array.isArray(job.data.milestones)) {
+    milestonesList = job.data.milestones;
+    console.log('✅ Found via job.data.milestones:', milestonesList.length);
+  }
+  // 3. Access via job._document (Firestore internal format)
+  else if (job?._document?.data?.value?.mapValue?.fields?.milestones) {
+    try {
+      // This is the actual Firestore internal structure
+      const milestoneField = job._document.data.value.mapValue.fields.milestones;
+      if (milestoneField?.arrayValue?.values) {
+        milestonesList = milestoneField.arrayValue.values.map((v: any) => {
+          const fields = v.mapValue.fields;
+          return {
+            id: fields.id?.stringValue || '',
+            description: fields.description?.stringValue || '',
+            status: fields.status?.stringValue || '',
+            createdAt: fields.createdAt?.stringValue || fields.createdAt?.timestampValue || ''
+          };
+        });
+        console.log('✅ Found via Firestore internal structure:', milestonesList.length);
+      }
+    } catch (e) {
+      console.log('Error parsing Firestore internal structure:', e);
+    }
+  }
+  // 4. Access via job._document.data (alternative)
+  else if (job?._document?.data?.milestones && Array.isArray(job._document.data.milestones)) {
+    milestonesList = job._document.data.milestones;
+    console.log('✅ Found via job._document.data.milestones:', milestonesList.length);
+  }
+  // 5. Check if milestones is in the root object but with different name
+  else if (job?.projectMilestones && Array.isArray(job.projectMilestones)) {
+    milestonesList = job.projectMilestones;
+    console.log('✅ Found via job.projectMilestones:', milestonesList.length);
+  }
+  
+  console.log('🔍 Final milestones list:', milestonesList);
+  
+  if (milestonesList.length > 0) {
+    console.log('✅ Milestones found:', milestonesList.length);
+    
+    // Create milestone data array for table
+    const milestoneData = milestonesList.map((milestone: any, index: number) => {
+      console.log(`📌 Milestone ${index}:`, milestone);
+      
+      // Format date properly
+      let formattedDate = 'N/A';
+      if (milestone.createdAt) {
+        try {
+          formattedDate = new Date(milestone.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          });
+        } catch (e) {
+          formattedDate = String(milestone.createdAt).substring(0, 10);
+        }
+      }
+      
+      return [
+        String(milestone.description || milestone.name || 'No description'),
+        String(milestone.status || 'Unknown'),
+        formattedDate,
+        String(milestone.id?.substring(0, 8) || milestone._id?.substring(0, 8) || `M${index + 1}`)
+      ];
+    });
+    
+    // Add table to PDF
+    autoTable(doc, {
+      startY: yPosition,
+      head: [['Description', 'Status', 'Added Date', 'ID']],
+      body: milestoneData,
+      theme: 'striped',
+      headStyles: { fillColor: [255, 153, 51] }, // Orange color for milestones
+      margin: { left: 14, right: 14 },
+      didDrawCell: (data: any) => {
+        // Color code status cells
+        if (data.column.index === 1) { // Status column
+          const status = String(data.cell.raw).toLowerCase();
+          if (status === 'paid') {
+            data.cell.styles.textColor = [0, 128, 0]; // Green
+            data.cell.styles.fontStyle = 'bold';
+          } else if (status === 'completed') {
+            data.cell.styles.textColor = [0, 0, 255]; // Blue
+            data.cell.styles.fontStyle = 'bold';
+          } else if (status === 'pending') {
+            data.cell.styles.textColor = [255, 165, 0]; // Orange
+            data.cell.styles.fontStyle = 'bold';
+          } else if (status === 'rejected') {
+            data.cell.styles.textColor = [255, 0, 0]; // Red
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+      }
+    });
+    
+    yPosition = (doc as any).lastAutoTable.finalY + 8;
+    
+    // Add milestone summary with counts
+    const paidCount = milestonesList.filter((m: any) => 
+      String(m.status).toLowerCase() === 'paid').length;
+    const pendingCount = milestonesList.filter((m: any) => 
+      String(m.status).toLowerCase() === 'pending').length;
+    const completedCount = milestonesList.filter((m: any) => 
+      String(m.status).toLowerCase() === 'completed').length;
+    const rejectedCount = milestonesList.filter((m: any) => 
+      String(m.status).toLowerCase() === 'rejected').length;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Milestone Summary:`, 14, yPosition);
+    yPosition += 5;
+    doc.text(`💰 Paid: ${paidCount} | ⏳ Pending: ${pendingCount} | ✅ Completed: ${completedCount} | ❌ Rejected: ${rejectedCount}`, 14, yPosition);
+    yPosition += 8;
+    
+  } else {
+    console.log('❌ No milestones found in any location');
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text('No milestones found for this job', 14, yPosition);
+    yPosition += 12;
+  }
+  
+  // ========== TASK ASSIGNMENTS ==========
+  if (job.taskAssignments && job.taskAssignments.length > 0) {
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('6. TASK ASSIGNMENTS', 14, yPosition);
+    
+    yPosition += 8;
+    
+    const assignmentData = job.taskAssignments.map((assignment: any) => [
+      String(assignment.taskName || 'N/A'),
+      String(assignment.assignedTo || 'N/A'),
+      String(assignment.status || 'N/A'),
+      assignment.assignedAt ? new Date(assignment.assignedAt).toLocaleDateString() : 'N/A',
+      assignment.reassignedAt ? new Date(assignment.reassignedAt).toLocaleDateString() : '-'
+    ]);
+    
+    autoTable(doc, {
+      startY: yPosition,
+      head: [['Task', 'Assigned To', 'Status', 'Assigned', 'Reassigned']],
+      body: assignmentData,
+      theme: 'striped',
+      headStyles: { fillColor: [0, 102, 204] },
+      margin: { left: 14, right: 14 },
+    });
+    
+    yPosition = (doc as any).lastAutoTable.finalY + 8;
+  }
+  
+  // ========== SKILLS, TAGS & EQUIPMENT ==========
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.text('7. SKILLS, TAGS & EQUIPMENT', 14, yPosition);
+  
+  yPosition += 8;
+  
+  // Skills
+  doc.setFontSize(12);
+  doc.setTextColor(80, 80, 80);
+  doc.text('Required Skills:', 14, yPosition);
+  yPosition += 6;
+  doc.setFontSize(10);
+  
+  if (job.requiredSkills && job.requiredSkills.length > 0) {
+    let skillsText = job.requiredSkills.join(', ');
+    doc.text(String(skillsText), 14, yPosition);
+    yPosition += 6;
+  } else {
+    doc.text('None specified', 14, yPosition);
+    yPosition += 6;
+  }
+  
+  // Tags
+  doc.setFontSize(12);
+  doc.setTextColor(80, 80, 80);
+  doc.text('Tags:', 14, yPosition);
+  yPosition += 6;
+  doc.setFontSize(10);
+  
+  if (job.tags && job.tags.length > 0) {
+    let tagsText = job.tags.join(', ');
+    doc.text(String(tagsText), 14, yPosition);
+    yPosition += 6;
+  } else {
+    doc.text('No tags', 14, yPosition);
+    yPosition += 6;
+  }
+  
+  // Equipment
+  doc.setFontSize(12);
+  doc.setTextColor(80, 80, 80);
+  doc.text('Equipment:', 14, yPosition);
+  yPosition += 6;
+  doc.setFontSize(10);
+  
+  if (job.equipment && job.equipment.length > 0) {
+    let equipmentText = job.equipment.join(', ');
+    doc.text(String(equipmentText), 14, yPosition);
+    yPosition += 6;
+  } else {
+    doc.text('No equipment listed', 14, yPosition);
+    yPosition += 6;
+  }
+  
+  // Permits
+  if (job.permits && job.permits.length > 0) {
+    doc.setFontSize(12);
+    doc.setTextColor(80, 80, 80);
+    doc.text('Permits:', 14, yPosition);
+    yPosition += 6;
+    doc.setFontSize(10);
+    
+    let permitsText = job.permits.join(', ');
+    doc.text(String(permitsText), 14, yPosition);
+    yPosition += 6;
+  }
+  
+  // Services
+  if (job.services && job.services.length > 0) {
+    doc.setFontSize(12);
+    doc.setTextColor(80, 80, 80);
+    doc.text('Services:', 14, yPosition);
+    yPosition += 6;
+    doc.setFontSize(10);
+    
+    let servicesText = job.services.join(', ');
+    doc.text(String(servicesText), 14, yPosition);
+    yPosition += 6;
+  }
+  
+  yPosition += 4;
+  
+  // Line
+  doc.setDrawColor(200, 200, 200);
+  doc.line(14, yPosition, 196, yPosition);
+  yPosition += 8;
+  
+  // ========== FINANCIAL SUMMARY ==========
+  doc.setFontSize(16);
+  doc.setTextColor(0, 102, 204);
+  doc.text('8. FINANCIAL SUMMARY', 14, yPosition);
+  
+  yPosition += 10;
+  
+  // Financial table
+  autoTable(doc, {
+    startY: yPosition,
+    head: [['Description', 'Amount (AED)']],
+    body: [
+      ['Budget', String(job.budget?.toLocaleString() || '0')],
+      ['Actual Cost', String(job.actualCost?.toLocaleString() || '0')],
+      ['Variance', String((job.actualCost - job.budget)?.toLocaleString() || '0')],
+      ['Team Size', `${job.teamRequired || 0} members`],
+      ['Overtime Required', job.overtimeRequired ? 'Yes' : 'No'],
+      ...(job.overtimeRequired ? [['Overtime Hours', String(job.overtimeHours || '0')]] : [])
+    ],
+    theme: 'striped',
+    headStyles: { fillColor: [0, 102, 204] },
+    margin: { left: 14, right: 14 },
+  });
+  
+  yPosition = (doc as any).lastAutoTable.finalY + 8;
+  
+  // ========== SPECIAL INSTRUCTIONS ==========
+  if (job.specialInstructions) {
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('9. SPECIAL INSTRUCTIONS', 14, yPosition);
+    
+    yPosition += 8;
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    
+    // Split long text into multiple lines
+    const splitInstructions = doc.splitTextToSize(String(job.specialInstructions), 180);
+    doc.text(splitInstructions, 14, yPosition);
+    
+    yPosition += splitInstructions.length * 5 + 8;
+  }
+  
+  // ========== EXECUTION LOGS ==========
+  if (job.executionLogs && job.executionLogs.length > 0) {
+    // Check if we need a new page
+    if (yPosition > 250) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('10. EXECUTION LOGS', 14, yPosition);
+    
+    yPosition += 8;
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    
+    job.executionLogs.forEach((log: any, index: number) => {
+      if (yPosition > 280) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
+      let logText = typeof log === 'string' ? log : JSON.stringify(log);
+      if (logText.length > 100) logText = logText.substring(0, 100) + '...';
+      
+      doc.text(`• ${String(logText)}`, 14, yPosition);
+      yPosition += 5;
+    });
+    
+    yPosition += 4;
+  }
+  
+  // ========== REMINDERS ==========
+  if (job.reminderEnabled || job.reminderDate) {
+    // Check if we need a new page
+    if (yPosition > 250) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Reminders:', 14, yPosition);
+    
+    yPosition += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    
+    if (job.reminderEnabled) {
+      doc.text(`• Reminder Enabled: Yes`, 14, yPosition);
+      yPosition += 5;
+    }
+    if (job.reminderDate) {
+      doc.text(`• Reminder Date: ${new Date(job.reminderDate).toLocaleDateString()}`, 14, yPosition);
+      yPosition += 5;
+    }
+    if (job.reminderSent) {
+      doc.text(`• Reminder Sent: Yes`, 14, yPosition);
+      yPosition += 5;
+    }
+    
+    yPosition += 4;
+  }
+  
+  // ========== TIMESTAMPS ==========
+  // Check if we need a new page
+  if (yPosition > 250) {
+    doc.addPage();
+    yPosition = 20;
+  }
+  
+  doc.setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+  doc.text('System Timestamps:', 14, yPosition);
+  
+  yPosition += 6;
+  doc.setFontSize(9);
+  doc.setTextColor(120, 120, 120);
+  doc.text(`Created: ${job.createdAt ? new Date(job.createdAt).toLocaleString() : 'N/A'}`, 14, yPosition);
+  yPosition += 4;
+  doc.text(`Last Updated: ${job.updatedAt ? new Date(job.updatedAt).toLocaleString() : 'N/A'}`, 14, yPosition);
+  yPosition += 4;
+  if (job.completedAt) {
+    doc.text(`Completed: ${new Date(job.completedAt).toLocaleString()}`, 14, yPosition);
+    yPosition += 4;
+  }
+  
+  // ========== FOOTER ==========
+  // Add footer on last page
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text('CleanCorp Services LLC - Professional Cleaning Solutions', 14, 290);
+    doc.text(`Page ${i} of ${pageCount}`, 180, 290);
+    doc.text('For any queries, please contact accounts@cleancorp.ae', 14, 295);
+  }
+  
+  // ========== SAVE PDF ==========
+  const fileName = `job_report_${job.id?.substring(0, 8)}_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(fileName);
+};
+
 
   return (
     <div className="min-h-screen bg-white text-gray-900 p-6 space-y-8">
@@ -3525,7 +2229,7 @@ export default function JobDetailPage() {
               <span className="text-xs font-bold text-emerald-800">JOB COMPLETED</span>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button
               onClick={() => setActiveTab('completion')}
               className="group p-4 bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 rounded-xl text-center transition-all hover:scale-105"
@@ -4546,76 +3250,231 @@ export default function JobDetailPage() {
             </div>
           )}
 
-          {/* ========== COMPENSATION SECTION ========== */}
-          {activeTab === 'compensation' && (
-            <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
-              {/* Save Button for Compensation */}
-             
-              <h3 className="text-xl font-bold text-gray-900 mb-8 flex items-center gap-2">
-                <DollarSign className="w-6 h-6 text-green-600" />
-                Team Compensation Analysis
-              </h3>
+         {/* ========== COMPENSATION SECTION ========== */}
+         {/* ========== COMPENSATION SECTION ========== */}
+{activeTab === 'compensation' && (
+  <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
+    {/* Header with Add Milestone Button */}
+    <div className="flex items-center justify-between mb-8">
+      <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+        <DollarSign className="w-6 h-6 text-green-600" />
+        Team Compensation Analysis
+      </h3>
+      
+      {/* Add Milestone Button */}
+      <button
+        onClick={() => setShowMilestoneForm(!showMilestoneForm)}
+        className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm transition-all shadow-md hover:scale-[1.02]"
+      >
+        <Plus className="h-4 w-4" />
+        Add Milestone
+      </button>
+    </div>
 
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6">
-                  <div className="text-sm font-medium text-green-700 mb-1">Total Job Cost</div>
-                  <div className="text-3xl font-bold text-green-900">
-                    AED {teamMembers.reduce((sum, m) => sum + m.totalCompensation, 0).toLocaleString()}
-                  </div>
-                  <div className="text-xs text-green-600 mt-2">{teamMembers.length} team members</div>
+    {/* Milestone Form - Shows when button is clicked */}
+    {showMilestoneForm && (
+      <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-300 rounded-2xl">
+        <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <FileText className="h-5 w-5 text-green-600" />
+          New Milestone
+        </h4>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Description Field */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-2">
+              Description *
+            </label>
+            <input
+              type="text"
+              value={milestoneDescription}
+              onChange={(e) => setMilestoneDescription(e.target.value)}
+              placeholder="Enter milestone description..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900"
+            />
+          </div>
+
+          {/* Status Dropdown */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-2">
+              Status *
+            </label>
+            <select
+              value={milestoneStatus}
+              onChange={(e) => setMilestoneStatus(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-gray-900 font-medium"
+            >
+              <option value="">Select Status</option>
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Form Actions */}
+        <div className="flex justify-end gap-3 mt-4">
+          <button
+            onClick={() => {
+              setShowMilestoneForm(false)
+              setMilestoneDescription('')
+              setMilestoneStatus('')
+            }}
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-bold text-sm transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAddMilestoneToFirebase}
+            disabled={!milestoneDescription || !milestoneStatus}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg font-bold text-sm transition-all flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            Add Milestone
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* Milestones List - Shows all added milestones from Firebase */}
+    {milestones.length > 0 && (
+      <div className="mb-8">
+        <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <CheckCircle className="h-5 w-5 text-blue-600" />
+          Project Milestones
+        </h4>
+        <div className="space-y-3">
+          {milestones.map((milestone, index) => (
+            <div
+              key={milestone.id || index}
+              className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                  milestone.status === 'Paid' ? 'bg-green-100 text-green-700' :
+                  milestone.status === 'Completed' ? 'bg-blue-100 text-blue-700' :
+                  milestone.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                  'bg-red-100 text-red-700'
+                }`}>
+                  {milestone.status === 'Paid' && <DollarSign className="h-4 w-4" />}
+                  {milestone.status === 'Completed' && <CheckCircle className="h-4 w-4" />}
+                  {milestone.status === 'Pending' && <Clock className="h-4 w-4" />}
+                  {milestone.status === 'Rejected' && <X className="h-4 w-4" />}
                 </div>
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
-                  <div className="text-sm font-medium text-blue-700 mb-1">Average Rate/Hour</div>
-                  <div className="text-3xl font-bold text-blue-900">
-                    AED {Math.round(teamMembers.reduce((sum, m) => sum + m.hourlyRate, 0) / teamMembers.length)}
-                  </div>
-                  <div className="text-xs text-blue-600 mt-2">Across all roles</div>
-                </div>
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6">
-                  <div className="text-sm font-medium text-purple-700 mb-1">Total Estimated Hours</div>
-                  <div className="text-3xl font-bold text-purple-900">
-                    {teamMembers.reduce((sum, m) => sum + m.estimatedHours, 0)} hrs
-                  </div>
-                  <div className="text-xs text-purple-600 mt-2">Project duration</div>
+                <div>
+                  <p className="font-medium text-gray-900">{milestone.description}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Added: {milestone.createdAt ? new Date(milestone.createdAt).toLocaleDateString() : 'Just now'}
+                  </p>
                 </div>
               </div>
-
-              {/* Detailed Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="border-b border-gray-300">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Team Member</th>
-                      <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Role</th>
-                      <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Hourly Rate</th>
-                      <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Est. Hours</th>
-                      <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Total Cost</th>
-                      <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {teamMembers.map((member) => (
-                      <tr key={member.id} className="hover:bg-gray-50 transition-all border-b border-gray-200">
-                        <td className="px-4 py-4 text-sm font-medium text-gray-900">{member.name}</td>
-                        <td className="px-4 py-4 text-sm text-gray-600">{member.role}</td>
-                        <td className="px-4 py-4 text-sm font-bold text-gray-900">AED {member.hourlyRate}</td>
-                        <td className="px-4 py-4 text-sm text-gray-600">{member.estimatedHours}h</td>
-                        <td className="px-4 py-4 text-sm font-bold text-green-600">AED {member.totalCompensation}</td>
-                        <td className="px-4 py-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            member.status === 'Confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {member.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+                  milestone.status === 'Paid' ? 'bg-green-100 text-green-800 border border-green-300' :
+                  milestone.status === 'Completed' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+                  milestone.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' :
+                  'bg-red-100 text-red-800 border border-red-300'
+                }`}>
+                  {milestone.status}
+                </span>
+                <button
+                  onClick={() => handleDeleteMilestone(milestone.id)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                  title="Delete Milestone"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             </div>
-          )}
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* Summary Cards */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6">
+        <div className="text-sm font-medium text-green-700 mb-1">Total Job Cost</div>
+        <div className="text-3xl font-bold text-green-900">
+          AED {teamMembers.reduce((sum, m) => sum + m.totalCompensation, 0).toLocaleString()}
+        </div>
+        <div className="text-xs text-green-600 mt-2">{teamMembers.length} team members</div>
+      </div>
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
+        <div className="text-sm font-medium text-blue-700 mb-1">Average Rate/Hour</div>
+        <div className="text-3xl font-bold text-blue-900">
+          AED {Math.round(teamMembers.reduce((sum, m) => sum + m.hourlyRate, 0) / teamMembers.length)}
+        </div>
+        <div className="text-xs text-blue-600 mt-2">Across all roles</div>
+      </div>
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6">
+        <div className="text-sm font-medium text-purple-700 mb-1">Total Estimated Hours</div>
+        <div className="text-3xl font-bold text-purple-900">
+          {teamMembers.reduce((sum, m) => sum + m.estimatedHours, 0)} hrs
+        </div>
+        <div className="text-xs text-purple-600 mt-2">Project duration</div>
+      </div>
+    </div>
+
+    {/* Milestone Summary Cards */}
+    {milestones.length > 0 && (
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+          <p className="text-xs font-bold text-green-700 uppercase">Paid</p>
+          <p className="text-xl font-bold text-green-900">{milestones.filter(m => m.status === 'Paid').length}</p>
+        </div>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-center">
+          <p className="text-xs font-bold text-yellow-700 uppercase">Pending</p>
+          <p className="text-xl font-bold text-yellow-900">{milestones.filter(m => m.status === 'Pending').length}</p>
+        </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+          <p className="text-xs font-bold text-blue-700 uppercase">Completed</p>
+          <p className="text-xl font-bold text-blue-900">{milestones.filter(m => m.status === 'Completed').length}</p>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
+          <p className="text-xs font-bold text-red-700 uppercase">Rejected</p>
+          <p className="text-xl font-bold text-red-900">{milestones.filter(m => m.status === 'Rejected').length}</p>
+        </div>
+      </div>
+    )}
+
+    {/* Detailed Table */}
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead className="border-b border-gray-300">
+          <tr>
+            <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Team Member</th>
+            <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Role</th>
+            <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Hourly Rate</th>
+            <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Est. Hours</th>
+            <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Total Cost</th>
+            <th className="text-left px-4 py-3 text-sm font-bold text-gray-700">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {teamMembers.map((member) => (
+            <tr key={member.id} className="hover:bg-gray-50 transition-all border-b border-gray-200">
+              <td className="px-4 py-4 text-sm font-medium text-gray-900">{member.name}</td>
+              <td className="px-4 py-4 text-sm text-gray-600">{member.role}</td>
+              <td className="px-4 py-4 text-sm font-bold text-gray-900">AED {member.hourlyRate}</td>
+              <td className="px-4 py-4 text-sm text-gray-600">{member.estimatedHours}h</td>
+              <td className="px-4 py-4 text-sm font-bold text-green-600">AED {member.totalCompensation}</td>
+              <td className="px-4 py-4">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  member.status === 'Confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {member.status}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
 
           {/* ========== EMPLOYEE FEEDBACK SECTION ========== */}
           {activeTab === 'feedback' && (
@@ -4960,28 +3819,423 @@ export default function JobDetailPage() {
             </div>
           )}
 
-          {activeTab === 'completion' && (
-            <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
-              {/* Save Button for Completion */}
-             
+        
+        {/* ========== COMPLETION SECTION ========== */}
+{activeTab === 'completion' && (
+  <div className="bg-white border border-gray-300 rounded-3xl p-8 shadow-sm">
+    {/* Header */}
+    <div className="flex items-center justify-between mb-8">
+      <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+        <CheckCircle className="w-6 h-6 text-emerald-600" />
+        Post-Completion Workflow
+      </h3>
+      {job.status === 'Completed' && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl">
+          <CheckCircle className="w-4 h-4" />
+          <span className="text-xs font-bold">COMPLETED ON {job.completedAt ? new Date(job.completedAt).toLocaleDateString() : 'N/A'}</span>
+        </div>
+      )}
+    </div>
 
-              <h3 className="text-xl font-bold text-gray-900 mb-8">Job Completion</h3>
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-6">
-                  <h4 className="font-bold text-gray-900 mb-4">Final Documentation</h4>
-                  <p className="text-gray-700 mb-4">
-                    All job tasks have been completed. Please review the final documentation before closing the job.
-                  </p>
-                  <button
-                    onClick={handleCompleteJob}
-                    className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all"
-                  >
-                    Mark Job as Completed
-                  </button>
-                </div>
+    {/* Job Completion Button */}
+
+    <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-6 mb-8">
+      <h4 className="font-bold text-gray-900 mb-4">Final Documentation</h4>
+      <p className="text-gray-700 mb-4">
+        All job tasks have been completed. Please review the final documentation before closing the job.
+      </p>
+      <button
+        onClick={handleCompleteJob}
+        className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+          job.status === 'Completed'
+            ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+            : 'bg-emerald-600 text-white hover:bg-emerald-700'
+        }`}
+        disabled={job.status === 'Completed'}
+      >
+        {job.status === 'Completed' ? (
+          <>
+            <CheckCircle className="h-5 w-5" />
+            Job Completed ✓
+          </>
+        ) : (
+          'Mark Job as Completed'
+        )}
+      </button>
+    </div>
+    
+    {/* JOB REPORT INVOICE - PROFESSIONAL SECTION */}
+    {job.status === 'Completed' && (
+      <div className="bg-white border-2 border-gray-300 rounded-3xl p-8 shadow-xl mb-8 print:shadow-none print:border">
+        {/* Invoice Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b-2 border-gray-300">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">JOB COMPLETION REPORT</h2>
+            <p className="text-sm text-gray-600">Invoice & Final Documentation</p>
+          </div>
+          <div className="mt-4 md:mt-0 text-right">
+            <div className="text-sm font-bold text-gray-900">Report ID: {job.id?.substring(0, 8).toUpperCase()}</div>
+            <div className="text-sm text-gray-600">Date: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            <div className="text-sm text-gray-600">Completed: {job.completedAt ? new Date(job.completedAt).toLocaleDateString() : 'N/A'}</div>
+          </div>
+        </div>
+
+        {/* Company & Client Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="bg-gray-50 p-6 rounded-2xl border border-gray-300">
+            <h3 className="text-sm font-bold text-gray-700 uppercase mb-4 flex items-center gap-2">
+              <Building className="w-4 h-4 text-blue-600" />
+              Service Provider
+            </h3>
+            <div className="space-y-2">
+              <p className="text-lg font-bold text-gray-900">CleanCorp Services LLC</p>
+              <p className="text-sm text-gray-600">P.O. Box 12345, Dubai, UAE</p>
+              <p className="text-sm text-gray-600">+971 4 123 4567</p>
+              <p className="text-sm text-gray-600">info@cleancorp.ae</p>
+              <p className="text-sm text-gray-600">TRN: 100123456700003</p>
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 p-6 rounded-2xl border border-gray-300">
+            <h3 className="text-sm font-bold text-gray-700 uppercase mb-4 flex items-center gap-2">
+              <User className="w-4 h-4 text-green-600" />
+              Client Information
+            </h3>
+            <div className="space-y-2">
+              <p className="text-lg font-bold text-gray-900">{job.client || 'N/A'}</p>
+              <p className="text-sm text-gray-600">Client ID: {job.clientId || 'N/A'}</p>
+              <p className="text-sm text-gray-600">Location: {job.location || 'N/A'}</p>
+              {job.assignedEmployees?.[0] && (
+                <p className="text-sm text-gray-600">Contact: {job.assignedEmployees[0].email || 'N/A'}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Job Details Grid */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-300 mb-8">
+          <h3 className="text-sm font-bold text-gray-700 uppercase mb-4 flex items-center gap-2">
+            <FileText className="w-4 h-4 text-blue-600" />
+            Job Specifications
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-xl border border-blue-200">
+              <div className="text-xs text-gray-500 mb-1">Job Title</div>
+              <div className="text-sm font-bold text-gray-900">{job.title || 'N/A'}</div>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-blue-200">
+              <div className="text-xs text-gray-500 mb-1">Description</div>
+              <div className="text-sm font-bold text-gray-900 truncate" title={job.description}>
+                {job.description?.substring(0, 20) || 'N/A'}...
               </div>
             </div>
-          )}
+            <div className="bg-white p-4 rounded-xl border border-blue-200">
+              <div className="text-xs text-gray-500 mb-1">Priority</div>
+              <div className="text-sm font-bold text-gray-900">{job.priority || 'N/A'}</div>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-blue-200">
+              <div className="text-xs text-gray-500 mb-1">Risk Level</div>
+              <div className="text-sm font-bold text-gray-900">{job.riskLevel || 'N/A'}</div>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-blue-200">
+              <div className="text-xs text-gray-500 mb-1">Scheduled Date</div>
+              <div className="text-sm font-bold text-gray-900">{job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString() : 'N/A'}</div>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-blue-200">
+              <div className="text-xs text-gray-500 mb-1">Duration</div>
+              <div className="text-sm font-bold text-gray-900">{job.estimatedDuration || 'N/A'} hrs</div>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-blue-200">
+              <div className="text-xs text-gray-500 mb-1">Team Required</div>
+              <div className="text-sm font-bold text-gray-900">{job.teamRequired || 0} members</div>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-blue-200">
+              <div className="text-xs text-gray-500 mb-1">Location</div>
+              <div className="text-sm font-bold text-gray-900">{job.location || 'N/A'}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Assigned Team Members */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-300 mb-8">
+          <h3 className="text-sm font-bold text-gray-700 uppercase mb-4 flex items-center gap-2">
+            <Users className="w-4 h-4 text-purple-600" />
+            Assigned Team Members
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {job.assignedEmployees && job.assignedEmployees.length > 0 ? (
+              job.assignedEmployees.map((emp: any, index: number) => (
+                <div key={index} className="bg-white p-4 rounded-xl border border-purple-200 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold">
+                    {emp.name ? emp.name.substring(0, 2).toUpperCase() : 'EM'}
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-gray-900">{emp.name || 'Unknown'}</div>
+                    <div className="text-xs text-gray-600">{emp.email || 'No email'}</div>
+                    <div className="text-xs text-gray-500">ID: {emp.id?.substring(0, 8) || 'N/A'}</div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-4 text-gray-500">No team members assigned</div>
+            )}
+          </div>
+        </div>
+
+        {/* Tasks & Milestones */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Tasks */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-300">
+            <h3 className="text-sm font-bold text-gray-700 uppercase mb-4 flex items-center gap-2">
+              <CheckSquare className="w-4 h-4 text-green-600" />
+              Tasks Completed
+            </h3>
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+              {job.tasks && job.tasks.length > 0 ? (
+                job.tasks.map((task: any, index: number) => (
+                  <div key={index} className="bg-white p-3 rounded-xl border border-green-200">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="font-medium text-gray-900 text-sm">{task.title || 'Unnamed Task'}</div>
+                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">
+                        {task.completed ? 'Completed' : 'Pending'}
+                      </span>
+                    </div>
+                    {task.description && (
+                      <div className="text-xs text-gray-600 mb-2">{task.description}</div>
+                    )}
+                    <div className="flex justify-between text-[10px] text-gray-500">
+                      <span>Duration: {task.duration || 0}h</span>
+                      {task.progress !== undefined && <span>Progress: {task.progress}%</span>}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">No tasks found</div>
+              )}
+            </div>
+          </div>
+
+          {/* Milestones */}
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-300">
+            <h3 className="text-sm font-bold text-gray-700 uppercase mb-4 flex items-center gap-2">
+              <Award className="w-4 h-4 text-amber-600" />
+              Project Milestones
+            </h3>
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+              {job.milestones && job.milestones.length > 0 ? (
+                job.milestones.map((milestone: any, index: number) => (
+                  <div key={index} className="bg-white p-3 rounded-xl border border-amber-200">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="font-medium text-gray-900 text-sm">{milestone.description}</div>
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${
+                        milestone.status === 'Paid' ? 'bg-green-100 text-green-700' :
+                        milestone.status === 'Completed' ? 'bg-blue-100 text-blue-700' :
+                        milestone.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {milestone.status}
+                      </span>
+                    </div>
+                    {milestone.createdAt && (
+                      <div className="text-[10px] text-gray-500">
+                        Added: {new Date(milestone.createdAt).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">No milestones found</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Task Assignments */}
+        {job.taskAssignments && job.taskAssignments.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-300 mb-8">
+            <h3 className="text-sm font-bold text-gray-700 uppercase mb-4 flex items-center gap-2">
+              <Users className="w-4 h-4 text-blue-600" />
+              Task Assignments
+            </h3>
+            <div className="space-y-3">
+              {job.taskAssignments.map((assignment: any, index: number) => (
+                <div key={index} className="bg-white p-4 rounded-xl border border-blue-200">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                      <div className="font-bold text-gray-900 text-sm">{assignment.taskName}</div>
+                      <div className="text-xs text-gray-600 mt-1">Assigned to: {assignment.assignedTo}</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        assignment.status === 'completed' ? 'bg-green-100 text-green-700' :
+                        assignment.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {assignment.status}
+                      </span>
+                      {assignment.assignedAt && (
+                        <span className="text-[10px] text-gray-500">
+                          {new Date(assignment.assignedAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Skills, Tags & Equipment */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {/* Required Skills */}
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-300">
+            <h4 className="text-xs font-bold text-gray-700 uppercase mb-3">Required Skills</h4>
+            <div className="flex flex-wrap gap-2">
+              {job.requiredSkills && job.requiredSkills.length > 0 ? (
+                job.requiredSkills.map((skill: string, index: number) => (
+                  <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-bold">
+                    {skill}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-gray-500">None specified</span>
+              )}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-300">
+            <h4 className="text-xs font-bold text-gray-700 uppercase mb-3">Tags</h4>
+            <div className="flex flex-wrap gap-2">
+              {job.tags && job.tags.length > 0 ? (
+                job.tags.map((tag: string, index: number) => (
+                  <span key={index} className="px-2 py-1 bg-purple-100 text-purple-800 rounded-lg text-xs font-bold">
+                    {tag}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-gray-500">No tags</span>
+              )}
+            </div>
+          </div>
+
+          {/* Equipment */}
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-300">
+            <h4 className="text-xs font-bold text-gray-700 uppercase mb-3">Equipment</h4>
+            <div className="flex flex-wrap gap-2">
+              {job.equipment && job.equipment.length > 0 ? (
+                job.equipment.map((item: string, index: number) => (
+                  <span key={index} className="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-bold">
+                    {item}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-gray-500">No equipment listed</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Financial Summary */}
+        <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-2xl border border-emerald-300 mb-8">
+          <h3 className="text-sm font-bold text-gray-700 uppercase mb-4 flex items-center gap-2">
+            <DollarSign className="w-4 h-4 text-emerald-600" />
+            Financial Summary
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-emerald-200">
+                <span className="text-sm text-gray-700">Budget</span>
+                <span className="text-sm font-bold text-gray-900">AED {job.budget?.toLocaleString() || 0}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-emerald-200">
+                <span className="text-sm text-gray-700">Actual Cost</span>
+                <span className="text-sm font-bold text-gray-900">AED {job.actualCost?.toLocaleString() || 0}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-emerald-200">
+                <span className="text-sm text-gray-700">Variance</span>
+                <span className={`text-sm font-bold ${(job.actualCost - job.budget) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  AED {(job.actualCost - job.budget)?.toLocaleString() || 0}
+                </span>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-emerald-200">
+                <span className="text-sm text-gray-700">Team Size</span>
+                <span className="text-sm font-bold text-gray-900">{job.teamRequired || 0} members</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-emerald-200">
+                <span className="text-sm text-gray-700">Overtime Required</span>
+                <span className="text-sm font-bold text-gray-900">{job.overtimeRequired ? 'Yes' : 'No'}</span>
+              </div>
+              {job.overtimeRequired && (
+                <div className="flex justify-between items-center py-2 border-b border-emerald-200">
+                  <span className="text-sm text-gray-700">Overtime Hours</span>
+                  <span className="text-sm font-bold text-gray-900">{job.overtimeHours || 0}h</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Special Instructions & Notes */}
+        {job.specialInstructions && (
+          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-6 rounded-2xl border border-amber-300 mb-8">
+            <h3 className="text-sm font-bold text-gray-700 uppercase mb-3 flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-amber-600" />
+              Special Instructions
+            </h3>
+            <p className="text-sm text-gray-900">{job.specialInstructions}</p>
+          </div>
+        )}
+
+        {/* Execution Logs */}
+        {job.executionLogs && job.executionLogs.length > 0 && (
+          <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-2xl border border-gray-300 mb-8">
+            <h3 className="text-sm font-bold text-gray-700 uppercase mb-3 flex items-center gap-2">
+              <History className="w-4 h-4 text-gray-600" />
+              Execution Logs
+            </h3>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {job.executionLogs.map((log: any, index: number) => (
+                <div key={index} className="text-xs text-gray-700 border-l-2 border-gray-400 pl-3 py-1">
+                  {log}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Invoice Footer with PDF Download Button */}
+        <div className="mt-8 pt-6 border-t-2 border-gray-300">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-sm text-gray-600">
+              <p>This is a system-generated report. For any queries, please contact accounts@cleancorp.ae</p>
+              <p className="mt-1">Report generated on {new Date().toLocaleString()}</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold text-sm transition-all flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Print Report
+              </button>
+              <button
+                onClick={() => downloadJobPDF()}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all flex items-center gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)}
         </div>
 
         {/* Sidebar: Team & History */}
