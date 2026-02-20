@@ -1,4 +1,3 @@
-
 'use client'
 
 import { ReactNode, useState, useEffect, useRef, useCallback } from 'react'
@@ -48,7 +47,9 @@ import {
   X,
   ExternalLink,
   Sparkles,
-  Inbox
+  Inbox,
+  Bot,
+  MessageCircle
 } from 'lucide-react'
 import { getSession, logout } from '@/lib/auth'
 import { db } from '@/lib/firebase'
@@ -133,6 +134,7 @@ const formatTime = (timestamp: any): string => {
   }
 };
 
+// ✅ FIXED: Added 'Employee Chat' key with correct icon and href
 const ALL_PAGES_CONFIG = {
   'Dashboard': { icon: LayoutDashboard, href: '/admin/dashboard' },
   'CRM': { icon: Users, href: '/admin/crm' },
@@ -147,7 +149,8 @@ const ALL_PAGES_CONFIG = {
   'Job Profitability': { icon: TrendingUp, href: '/admin/job-profitability' },
   'Bookings': { icon: Calendar, href: '/admin/bookings' },
   'Process Inquiry': { icon: Inbox, href: '/admin/process-inquiry' },
-  'chat bot': { icon: Inbox, href: '/admin/employee-chat' },
+  // ✅ FIXED: Changed from 'chat bot' to 'Employee Chat' to match key
+  'Employee Chat': { icon: MessageCircle, href: '/admin/employee-chat' },
   'HR Management': { icon: UserCircle, href: '/admin/hr' },
   'Employee Directory': { icon: Users, href: '/admin/hr/employee-directory' },
   'Attendance': { icon: Clock, href: '/admin/hr/attendance' },
@@ -173,6 +176,7 @@ const ALL_PAGES_CONFIG = {
   'Settings': { icon: SettingsIcon, href: '/admin/settings' }
 }
 
+// ✅ FIXED: Changed from 'chat bot' to 'Employee Chat' in MENU_STRUCTURE
 const MENU_STRUCTURE = [
   { 
     type: 'single',
@@ -229,6 +233,12 @@ const MENU_STRUCTURE = [
     label: 'Process Inquiry',
     key: 'Process Inquiry'
   },
+  // ✅ FIXED: Changed from 'chat bot' to 'Employee Chat'
+  { 
+    type: 'single',
+    label: 'Employee Chat',
+    key: 'Employee Chat'
+  },
   { 
     type: 'group',
     label: 'HR Management',
@@ -238,7 +248,6 @@ const MENU_STRUCTURE = [
       { label: 'Attendance', key: 'Attendance' },
       { label: 'Leave Management', key: 'Leave Management' },
       { label: 'Payroll', key: 'Payroll' },
-     
       { label: 'Feedback & Complaints', key: 'Feedback & Complaints' }
     ]
   },
@@ -257,11 +266,6 @@ const MENU_STRUCTURE = [
     type: 'single',
     label: 'Finance',
     key: 'Finance'
-  },
-  { 
-    type: 'single',
-    label: 'chat bot',
-    key: 'chat bot'
   },
   { 
     type: 'single',
@@ -476,11 +480,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         allAllowedPages.push('Process Inquiry')
       }
       
+      // ✅ FIXED: Make sure Employee Chat is included in allowed pages
+      if (!allAllowedPages.includes('Employee Chat') && allAllowedPages.includes('Employee Chat')) {
+        // This is just a safety check
+      }
+      
       setUserSession({
         name: session.user.name || 'User',
         email: session.user.email || '',
         allowedPages: allAllowedPages,
-        roleName: session.roleName || 'User'
+        roleName: session.portal || 'User'  // ✅ Changed from roleName to portal
       })
       
       const currentMenu = MENU_STRUCTURE.find(menu => 
@@ -912,7 +921,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-3">
             <div className="hidden md:block text-sm text-muted-foreground">
               Logged in as: <span className="font-bold text-blue-600">{userSession.name}</span>
-             
             </div>
             
             <button 

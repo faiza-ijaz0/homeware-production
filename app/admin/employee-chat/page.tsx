@@ -1277,7 +1277,7 @@ export default function SimpleEmployeeChatPage() {
                       <Button 
                         onClick={handleSendMessage} 
                         disabled={!newMessage.trim() && !selectedImage || isSending}
-                        className="h-12 px-6 bg-gradient-to-r from-[#FA9DB7] to-[#B84A68] rounded-2xl shadow-lg"
+                        className="h-12 px-6 bg-gradient-to-r from-blue-700 to-blue-800 rounded-2xl shadow-lg"
                       >
                         <Send className="w-4 h-4 mr-2" />
                         {isSending ? 'Sending...' : 'Send'}

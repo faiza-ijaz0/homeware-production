@@ -1,7 +1,6 @@
-
 'use client'
 
-import { useState, useMemo, useEffect, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { 
   Plus, 
   Edit2, 
@@ -59,7 +58,8 @@ const ALL_PAGES = [
   'AI Command Center',
   'AI Recommendations',
   'CMS',
-  'Settings'
+  'Settings',
+  'Employee Chat' // ✅ Added Employee Chat to ALL_PAGES
 ]
 
 // Portal Types
@@ -79,7 +79,7 @@ interface Employee {
 
 // Extended UserRole interface for local state
 interface LocalUserRole extends UserRole {
-  allowedPages: any
+  allowedPages: string[]
   portal: 'admin' | 'employee'
   employeeId?: string
   employeeName?: string
@@ -527,7 +527,7 @@ export default function RoleManager() {
                       {user.portal === 'admin' ? (
                         // Show actual pages for admin
                         user.allowedPages.length > 0 ? (
-                          user.allowedPages.slice(0, 5).map((page: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined, index: Key | null | undefined) => (
+                          user.allowedPages.slice(0, 5).map((page, index) => (
                             <span 
                               key={index}
                               className="px-3 py-1.5 bg-emerald-100 text-emerald-600 text-xs font-bold rounded-lg border border-emerald-200"
@@ -541,14 +541,25 @@ export default function RoleManager() {
                           </span>
                         )
                       ) : (
-                        // Show chat access for employee
-                        <span className="px-3 py-1.5 bg-blue-100 text-blue-600 text-xs font-bold rounded-lg border border-blue-200 flex items-center gap-1">
-                          <MessageCircle className="h-3 w-3" />
-                          employe portal
-                        
-                        </span>
+                        // Show chat access for employee with proper label
+                        user.allowedPages.length > 0 ? (
+                          user.allowedPages.slice(0, 5).map((page, index) => (
+                            <span 
+                              key={index}
+                              className="px-3 py-1.5 bg-blue-100 text-blue-600 text-xs font-bold rounded-lg border border-blue-200 flex items-center gap-1"
+                            >
+                              <MessageCircle className="h-3 w-3" />
+                              {page}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="px-3 py-1.5 bg-blue-100 text-blue-600 text-xs font-bold rounded-lg border border-blue-200 flex items-center gap-1">
+                            <MessageCircle className="h-3 w-3" />
+                            Employee Chat
+                          </span>
+                        )
                       )}
-                      {user.portal === 'admin' && user.allowedPages.length > 5 && (
+                      {user.allowedPages.length > 5 && (
                         <span className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg border border-gray-200">
                           +{user.allowedPages.length - 5} more
                         </span>
@@ -563,7 +574,7 @@ export default function RoleManager() {
                           {user.portal === 'admin' ? 'Pages Access' : 'Chat Access'}
                         </span>
                         <span className="text-lg font-black text-black">
-                          {user.portal === 'admin' ? user.allowedPages.length : '1'} 
+                          {user.allowedPages.length} 
                           {user.portal === 'admin' && ` of ${ALL_PAGES.length}`}
                         </span>
                       </div>
@@ -677,8 +688,6 @@ export default function RoleManager() {
                     <p className="text-xs text-gray-500 mt-1">
                       {employees.length} employees available
                     </p>
-                    
-                   
                   </div>
                 )}
 
