@@ -21,6 +21,7 @@ import {
   PlusCircle,
   Wind
 } from 'lucide-react'
+import BookingFormProvider from '@/components/BookingFormProvider'
 
 export default function VillaDeepCleaning() {
   const categories = [
@@ -330,6 +331,17 @@ export default function VillaDeepCleaning() {
             </div>
             <Home className="absolute -bottom-10 -right-10 h-64 w-64 text-white/5 rotate-12 group-hover:scale-110 transition-transform duration-1000" />
           </motion.div>
+        </div>
+      </section>
+
+      {/* Booking Section */}
+      <section className="py-24 bg-white relative">
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-primary/5 blur-[120px] rounded-full -ml-48 pointer-events-none" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto">
+            <BookingFormProvider preselectedServiceName="Villa Deep Cleaning" showSuccessModal={true} />
+          </div>
         </div>
       </section>
     </div>

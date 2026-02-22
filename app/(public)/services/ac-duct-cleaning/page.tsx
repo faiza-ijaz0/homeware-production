@@ -21,6 +21,7 @@ import {
   History,
   Activity
 } from 'lucide-react'
+import BookingFormProvider from '@/components/BookingFormProvider'
 
 export default function ACDuctCleaning() {
   const categories = [
@@ -344,6 +345,17 @@ export default function ACDuctCleaning() {
             <Wind className="absolute -bottom-10 -left-10 h-64 w-64 text-white/5 -rotate-12 group-hover:scale-110 transition-transform duration-1000" />
             <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/10 blur-[100px] rounded-full" />
           </motion.div>
+        </div>
+      </section>
+
+      {/* Booking Section */}
+      <section className="py-24 bg-white relative">
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-primary/5 blur-[120px] rounded-full -ml-48 pointer-events-none" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto">
+            <BookingFormProvider preselectedServiceName="Ac Duct Cleaning" showSuccessModal={true} />
+          </div>
         </div>
       </section>
     </div>

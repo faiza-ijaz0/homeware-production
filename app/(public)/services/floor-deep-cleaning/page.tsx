@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { CheckCircle2, ArrowRight, Brush, Sparkles, Droplets, ShieldCheck, Play } from 'lucide-react'
+import BookingFormProvider from '@/components/BookingFormProvider'
 
 export default function FloorDeepCleaning() {
   return (
@@ -131,6 +132,16 @@ export default function FloorDeepCleaning() {
         <div className="absolute bottom-0 left-0 w-1/4 h-full bg-blue-500/5 blur-[120px] rounded-full -ml-20" />
       </section>
 
+      {/* Booking Section */}
+      <section className="py-24 bg-white relative">
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-primary/5 blur-[120px] rounded-full -ml-48 pointer-events-none" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto">
+            <BookingFormProvider preselectedServiceName="Floor deep cleaning" showSuccessModal={true} />
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
