@@ -2,7 +2,7 @@
 'use client'
 
 import { Suspense, useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Calendar,
   Clock,
@@ -45,6 +45,7 @@ interface FormData {
 
 function BookingPageContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const selectedServiceId = searchParams.get('service') || ''
 
   const [currentStep, setCurrentStep] = useState(1)
@@ -66,8 +67,6 @@ function BookingPageContent() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingServices, setIsLoadingServices] = useState(true)
-  const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [bookingNumber, setBookingNumber] = useState('')
 
   // Fetch active services from Firebase
   useEffect(() => {
@@ -264,25 +263,31 @@ function BookingPageContent() {
       const result = await saveBookingToFirebase(bookingData)
 
       if (result.success) {
-        setBookingNumber(result.bookingRef || '')
-        setShowSuccessModal(true)
+        const bookingId = result.bookingRef || ''
         
-        // Reset form
-        setFormData({
-          serviceId: '',
-          clientName: '',
-          clientEmail: '',
-          clientPhone: '',
-          clientAddress: '',
-          bookingDate: '',
-          bookingTime: '',
-          notes: '',
-          propertyType: 'apartment',
-          frequency: 'once',
-          area: ''
-        })
-        setSelectedService(null)
-        setCurrentStep(1)
+        // Send email notification
+        try {
+          await fetch('/api/send-booking-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientName: formData.clientName,
+              clientEmail: formData.clientEmail,
+              clientPhone: formData.clientPhone,
+              serviceName: selectedService?.name || 'Service',
+              bookingDate: formData.bookingDate,
+              bookingTime: formData.bookingTime,
+              message: formData.notes,
+              bookingId: bookingId,
+            }),
+          })
+        } catch (emailError) {
+          console.error('Email notification failed:', emailError)
+          // Continue even if email fails
+        }
+        
+        // Redirect to thank-you page
+        router.push(`/thank-you?booking-id=${bookingId}`)
       } else {
         throw new Error(result.error || 'Failed to save booking')
       }
@@ -729,30 +734,7 @@ function BookingPageContent() {
         </form>
       </div>
 
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-sm mx-auto text-center shadow-2xl">
-            <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-black text-foreground mb-2">Booking Confirmed!</h2>
-            <p className="text-muted-foreground mb-4">Your service booking has been successfully submitted</p>
-            <p className="text-sm text-muted-foreground mb-6">
-              Booking Number: <span className="font-black text-foreground">{bookingNumber}</span>
-            </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              We'll send you a confirmation email shortly. Our team will contact you to confirm the details.
-            </p>
-            <button
-              onClick={() => window.location.href = '/'}
-              className="w-full px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors"
-            >
-              Back to Home
-            </button>
-          </div>
-        </div>
-      )}
+
     </div>
   )
 }

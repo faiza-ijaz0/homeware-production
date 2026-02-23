@@ -17,7 +17,7 @@ import {
   Soup,
   Play
 } from 'lucide-react'
-import BookingFormProvider from '@/components/BookingFormProvider'
+
 
 export default function OfficeCleaning() {
   const servicesList = [
@@ -313,9 +313,6 @@ export default function OfficeCleaning() {
               <h4 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tighter">Ready For A <span className="text-primary italic">Professional Workspace?</span></h4>
               <p className="text-slate-400 text-lg mb-10 font-bold">Contact us today for a corporate cleaning experience you can trust.</p>
               <div className="flex flex-wrap justify-center gap-6">
-                <a href="tel:80046639675" className="bg-primary text-white px-10 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-600 transition-all flex items-center gap-3">
-                   800 4663 9675
-                </a>
                 <a href="https://homeworkuae.com/book-service" className="bg-primary text-white px-10 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-700 transition-all flex items-center gap-3">
                    Book Now
                 </a>
@@ -323,17 +320,6 @@ export default function OfficeCleaning() {
             </div>
             <Sparkles className="absolute -bottom-10 -right-10 h-64 w-64 text-white/5 rotate-12 group-hover:scale-110 transition-transform duration-1000" />
           </motion.div>
-        </div>
-      </section>
-
-      {/* Booking Section */}
-      <section className="py-24 bg-white relative">
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-primary/5 blur-[120px] rounded-full -ml-48 pointer-events-none" />
-        
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto">
-            <BookingFormProvider preselectedServiceName="Office Cleaning" />
-          </div>
         </div>
       </section>
     </div>

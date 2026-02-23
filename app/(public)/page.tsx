@@ -42,7 +42,6 @@ const CTAButton = ({ text, href, variant = "primary", icon: Icon = null, classNa
 export default function HomePage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLDivElement>(null)
-  const sliderRef = useRef<HTMLDivElement>(null)
 
   // Light scroll-reveal animation variants
   const fadeUp = {
@@ -55,9 +54,7 @@ export default function HomePage() {
   }
 
   const [isClient, setIsClient] = useState(false)
-  const [sliderIndex, setSliderIndex] = useState(0)
   const [blogSliderIndex, setBlogSliderIndex] = useState(0)
-  const [testimonialSliderIndex, setTestimonialSliderIndex] = useState(0)
   const [airQuality, setAirQuality] = useState(72)
   const [airQualityStatus, setAirQualityStatus] = useState("Moderate")
   const [airQualityColor, setAirQualityColor] = useState("text-amber-500")
@@ -76,16 +73,16 @@ export default function HomePage() {
   // Services data with Icons
   const services = [
     { title: "Residential Cleaning", href: "/services/residential-cleaning", icon: <Home className="h-7 w-7" />, description: "Regular hourly cleaning for homes", image: "https://images.unsplash.com/photo-1581578731548-c64695cc6958?auto=format&fit=crop&q=80&w=800", tag: "Regular" },
-    { title: "Villa Deep Cleaning", href: "/services/villa-deep-cleaning", icon: <Building2 className="h-7 w-7" />, description: "Complete interior and exterior sanitization", image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
-    { title: "AC Duct Cleaning", href: "/services/ac-duct-cleaning", icon: <Wind className="h-7 w-7" />, description: "Professional air duct sterilization", image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=800", tag: "Technical" },
-    { title: "Office Deep Cleaning", href: "/services/office-deep-cleaning", icon: <ShieldAlert className="h-7 w-7" />, description: "Corporate space sanitization", image: "https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
-    { title: "Kitchen Deep Cleaning", href: "/services/kitchen-deep-cleaning", icon: <Utensils className="h-7 w-7" />, description: "Heavy-duty degreasing and hood cleaning", image: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
-    { title: "Apartment Deep Cleaning", href: "/services/apartment-deep-cleaning", icon: <Building2 className="h-7 w-7" />, description: "Move-in or move-out cleaning", image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
-    { title: "Post Construction Cleaning", href: "/services/post-construction-cleaning", icon: <Construction className="h-7 w-7" />, description: "Remove dust and construction residue", image: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&q=80&w=800", tag: "Specialist" },
+    { title: "Villa Deep Cleaning", href: "/services/villa-deep-cleaning", icon: <Building2 className="h-7 w-7" />, description: "Complete interior and exterior sanitization", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
+    { title: "AC Duct Cleaning", href: "/services/ac-duct-cleaning", icon: <Wind className="h-7 w-7" />, description: "Professional air duct sterilization", image: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&q=80&w=800", tag: "Technical" },
+    { title: "Office Deep Cleaning", href: "/services/office-deep-cleaning", icon: <ShieldAlert className="h-7 w-7" />, description: "Corporate space sanitization", image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
+    { title: "Kitchen Deep Cleaning", href: "/services/kitchen-deep-cleaning", icon: <Utensils className="h-7 w-7" />, description: "Heavy-duty degreasing and hood cleaning", image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
+    { title: "Apartment Deep Cleaning", href: "/services/apartment-deep-cleaning", icon: <Building2 className="h-7 w-7" />, description: "Move-in or move-out deep cleaning", image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
+    { title: "Post Construction Cleaning", href: "/services/post-construction-cleaning", icon: <Construction className="h-7 w-7" />, description: "Remove dust and construction residue", image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=800", tag: "Specialist" },
     { title: "Sofa Deep Cleaning", href: "/services/sofa-deep-cleaning", icon: <Sofa className="h-7 w-7" />, description: "Professional upholstery cleaning", image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800", tag: "Specialist" },
-    { title: "Window Cleaning", href: "/services/window-cleaning", icon: <Layout className="h-7 w-7" />, description: "Interior and exterior window service", image: "https://images.unsplash.com/photo-1584775524340-3fb88cd59b13?auto=format&fit=crop&q=80&w=800", tag: "Regular" },
-    { title: "Carpet Deep Cleaning", href: "/services/carpets-deep-cleaning", icon: <Sparkles className="h-7 w-7" />, description: "Professional carpet and rug cleaning", image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
-    { title: "Water Tank Cleaning", href: "/services/water-tank-cleaning", icon: <Waves className="h-7 w-7" />, description: "Safe water tank sanitization", image: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80&w=800", tag: "Technical" },
+    { title: "Window Cleaning", href: "/services/window-cleaning", icon: <Layout className="h-7 w-7" />, description: "Interior and exterior window service", image: "https://images.unsplash.com/photo-1596204976717-1a9ff47f74ef?auto=format&fit=crop&q=80&w=800", tag: "Regular" },
+    { title: "Carpet Deep Cleaning", href: "/services/carpets-deep-cleaning", icon: <Sparkles className="h-7 w-7" />, description: "Professional carpet and rug cleaning", image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
+    { title: "Water Tank Cleaning", href: "/services/water-tank-cleaning", icon: <Waves className="h-7 w-7" />, description: "Safe water tank sanitization", image: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=800", tag: "Technical" },
     { title: "Gym Deep Cleaning", href: "/services/gym-deep-cleaning", icon: <Dumbbell className="h-7 w-7" />, description: "Equipment and facility sanitization", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800", tag: "Deep" }
   ]
 
@@ -172,42 +169,6 @@ export default function HomePage() {
     }
   }, [])
 
-  // Auto-scroll services slider to the left (slow speed)
-  useEffect(() => {
-    let isMounted = true
-    const interval = setInterval(() => {
-      if (isMounted) {
-        setSliderIndex((prev) => {
-          const maxIndex = services.length - 4
-          return prev >= maxIndex ? 0 : prev + 1
-        })
-      }
-    }, 4000)
-    
-    return () => {
-      isMounted = false
-      clearInterval(interval)
-    }
-  }, [services.length])
-
-  // Auto-scroll blog slider to the right (slow speed)
-  useEffect(() => {
-    let isMounted = true
-    const interval = setInterval(() => {
-      if (isMounted) {
-        setBlogSliderIndex((prev) => {
-          const maxIndex = blogs.length - 3
-          return prev <= 0 ? maxIndex : prev - 1
-        })
-      }
-    }, 4500)
-    
-    return () => {
-      isMounted = false
-      clearInterval(interval)
-    }
-  }, [blogs.length])
-
   // Only use scroll animations on client side
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -259,7 +220,7 @@ export default function HomePage() {
                 </div>
 
                 <motion.p variants={fadeUp} className="mt-6 text-base md:text-lg text-slate-500 max-w-lg leading-relaxed">
-                  Experience the future of home wellness with our AI-optimized cleaning schedules and eco-friendly protocols.
+                  Professional cleaning solutions for homes and offices across the UAE. Trusted by 20,000+ clients with eco-friendly products and expert teams.
                 </motion.p>
 
                 <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-5 mt-10">
@@ -270,9 +231,14 @@ export default function HomePage() {
                     icon={ArrowUpRight}
                   />
                   <div className="flex -space-x-3">
-                    {[1, 2, 3, 4].map((i) => (
+                    {[
+                      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150&h=150",
+                      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150&h=150",
+                      "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=150&h=150",
+                      "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=150&h=150"
+                    ].map((src, i) => (
                       <div key={i} className="w-10 h-10 rounded-full border-3 border-white overflow-hidden shadow-sm">
-                        <img src={`https://i.pravatar.cc/150?u=${i}`} alt="user" className="w-full h-full object-cover" />
+                        <img src={src} alt="Happy client" className="w-full h-full object-cover" />
                       </div>
                     ))}
                     <div className="w-10 h-10 rounded-full border-3 border-white bg-slate-100 flex items-center justify-center text-[9px] font-bold text-slate-500">
@@ -287,24 +253,15 @@ export default function HomePage() {
             <div className="w-full lg:w-2/5 relative">
               <div className="relative aspect-square max-w-[460px] mx-auto">
                 
-                {/* Main Video Card */}
+                {/* Main Image Card */}
                 <div className="absolute inset-0 bg-slate-900 rounded-3xl overflow-hidden shadow-2xl z-20">
-                  <video 
-                    className="w-full h-full object-cover opacity-60"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                  >
-                    <source src="https://videos.pexels.com/video-files/4109343/4109343-uhd_2732_1440_25fps.mp4" type="video/mp4" />
-                    <img 
-                      src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800" 
-                      className="w-full h-full object-cover opacity-60"
-                      alt="Professional Cleaning Service"
-                    />
-                  </video>
+                  <img 
+                    src="https://images.unsplash.com/photo-1581578731548-c64695cc6958?auto=format&fit=crop&q=80&w=1200" 
+                    className="w-full h-full object-cover"
+                    alt="Professional Cleaning Service - Bright Modern Home"
+                  />
                   
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
                   
                   <div className="absolute bottom-6 left-6 right-6">
                     <div className="flex items-center gap-2 mb-3">
@@ -389,8 +346,97 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* Quick Service Icons */}
-      <section className="py-20 px-4 overflow-hidden bg-gradient-to-b from-white to-slate-50/50 relative">
+      {/* Certifications & Awards Section */}
+      <section className="py-16 bg-gradient-to-b from-white to-slate-50/30 relative">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={fadeUp}
+            className="text-center mb-12"
+          >
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/8 text-primary font-semibold text-[11px] uppercase tracking-wider mb-3">
+              <Award className="h-3 w-3" />
+              Certifications & Awards
+            </span>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">Recognized <span className="text-primary">Excellence</span></h2>
+            <p className="text-slate-500 max-w-xl mx-auto text-sm">Certified by leading authorities and recognized for our commitment to quality</p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 max-w-4xl mx-auto">
+            {/* Best Deep Cleaning Company 2025 */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeUp}
+              custom={0}
+              className="relative p-6 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl border-2 border-amber-200 text-center group hover:shadow-lg hover:shadow-amber-100 transition-all duration-300"
+            >
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="px-3 py-1 rounded-full bg-amber-500 text-white text-[9px] font-bold uppercase tracking-wider shadow-md">Award</span>
+              </div>
+              <div className="h-14 w-14 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 mx-auto mb-3">
+                <Star className="h-7 w-7 fill-amber-500 text-amber-500" />
+              </div>
+              <h4 className="text-sm font-black text-slate-900 leading-tight mb-1">Best Deep Cleaning Company</h4>
+              <span className="text-xl font-black text-amber-600">2025</span>
+            </motion.div>
+
+            {/* Dubai Municipality Approved */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeUp}
+              custom={1}
+              className="p-6 bg-white rounded-2xl border border-slate-100 text-center group hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+            >
+              <div className="h-14 w-14 rounded-xl bg-primary/8 flex items-center justify-center text-primary mx-auto mb-3">
+                <ShieldCheck className="h-7 w-7" />
+              </div>
+              <h4 className="text-sm font-black text-slate-900 leading-tight mb-1">Dubai Municipality</h4>
+              <span className="text-xs font-semibold text-primary">Approved</span>
+            </motion.div>
+
+            {/* ISO Certified */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeUp}
+              custom={2}
+              className="p-6 bg-white rounded-2xl border border-slate-100 text-center group hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+            >
+              <div className="h-14 w-14 rounded-xl bg-primary/8 flex items-center justify-center text-primary mx-auto mb-3">
+                <Shield className="h-7 w-7" />
+              </div>
+              <h4 className="text-sm font-black text-slate-900 leading-tight mb-1">ISO Certified</h4>
+              <span className="text-xs font-semibold text-primary">Quality Standards</span>
+            </motion.div>
+
+            {/* 20+ Years Legacy */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeUp}
+              custom={3}
+              className="p-6 bg-white rounded-2xl border border-slate-100 text-center group hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+            >
+              <div className="h-14 w-14 rounded-xl bg-primary/8 flex items-center justify-center text-primary mx-auto mb-3">
+                <Award className="h-7 w-7" />
+              </div>
+              <h4 className="text-sm font-black text-slate-900 leading-tight mb-1">E-Movers Legacy</h4>
+              <span className="text-xs font-semibold text-primary">20+ Years</span>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Service Icons - Static Grid */}
+      <section className="py-20 px-4 bg-gradient-to-b from-white to-slate-50/50 relative">
         <div className="container mx-auto relative z-10">
           <motion.div
             initial="hidden"
@@ -407,38 +453,26 @@ export default function HomePage() {
             <p className="text-slate-500 max-w-xl mx-auto text-sm">Comprehensive cleaning solutions delivered with precision and care</p>
           </motion.div>
           
-          <style>{`
-            @keyframes scroll-left {
-              0% { transform: translateX(0); }
-              100% { transform: translateX(-50%); }
-            }
-            .service-slider {
-              display: flex;
-              gap: 1.5rem;
-              animation: scroll-left 60s linear infinite;
-              will-change: transform;
-            }
-            .service-slider:hover {
-              animation-play-state: paused;
-            }
-          `}</style>
-          <div className="relative flex overflow-x-hidden">
-            <div className="service-slider">
-              {[...services, ...services].map((service, i) => (
-                <a 
-                  key={i}
-                  href={service.href}
-                  className="flex flex-col items-center justify-center shrink-0 w-40 p-6 bg-white border border-slate-100 rounded-2xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group cursor-pointer"
-                >
-                  <div className="h-14 w-14 rounded-xl bg-primary/8 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 mb-4">
-                    {service.icon}
-                  </div>
-                  <span className="text-[11px] font-semibold text-center text-slate-700 leading-tight group-hover:text-primary transition-colors whitespace-normal">
-                    {service.title}
-                  </span>
-                </a>
-              ))}
-            </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+            {services.map((service, i) => (
+              <motion.a
+                key={i}
+                href={service.href}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-40px' }}
+                variants={fadeUp}
+                custom={i % 6}
+                className="flex flex-col items-center justify-center p-5 bg-white border border-slate-100 rounded-2xl hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group cursor-pointer"
+              >
+                <div className="h-14 w-14 rounded-xl bg-primary/8 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 mb-3">
+                  {service.icon}
+                </div>
+                <span className="text-[11px] font-semibold text-center text-slate-700 leading-tight group-hover:text-primary transition-colors">
+                  {service.title}
+                </span>
+              </motion.a>
+            ))}
           </div>
         </div>
       </section>
@@ -473,7 +507,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-2xl font-black mb-3 text-slate-900">Our Vision</h3>
               <p className="text-slate-500 leading-relaxed">
-                To be the first choice for customers , employees and suppliers in the region we operate
+                To be the first choice for our customers, employees, and suppliers in the regions we operate.
               </p>
             </motion.div>
             
@@ -490,7 +524,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-2xl font-black mb-3">Our Mission</h3>
               <p className="text-slate-400 leading-relaxed">
-                To Provide Reliable, flexible and consistent solution to our Internal and External stakeholders in out hygiene business
+                To provide reliable, flexible, and consistent solutions to our internal and external stakeholders in our hygiene business.
               </p>
             </motion.div>
 
@@ -508,10 +542,10 @@ export default function HomePage() {
               <h3 className="text-2xl font-black mb-5 text-slate-900">Core Values</h3>
               <ul className="space-y-3">
                 {[
-                  "Honouring our words",
-                  "Trust",
-                  "Reliability",
-                  "Long term approach"
+                  "Honouring Our Commitments",
+                  "Trust & Integrity",
+                  "Reliability & Consistency",
+                  "Long-Term Approach"
                 ].map((val, i) => (
                   <li key={i} className="flex items-center gap-2.5 text-slate-600">
                     <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
@@ -524,88 +558,69 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Services Slider Section */}
-      <section className="py-20 bg-slate-50/50 overflow-hidden relative">
+      {/* Services Section - Static Grid */}
+      <section className="py-20 bg-slate-50/50 relative">
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
-            <div className="max-w-xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/8 text-primary font-semibold text-[11px] uppercase tracking-wider mb-4">
-                <Sparkles className="h-3 w-3" />
-                Our Services
-              </span>
-              <h3 className="text-3xl lg:text-4xl font-black text-slate-900 leading-tight tracking-tight mb-3">
-                Exceptional Care for <span className="text-primary">Every Space</span>
-              </h3>
-              <p className="text-slate-500 text-base leading-relaxed">
-                Specialized teams equipped with cutting-edge technology delivering pristine results
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setSliderIndex(Math.max(0, sliderIndex - 1))}
-                disabled={sliderIndex === 0}
-                className="h-10 w-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button 
-                onClick={() => setSliderIndex(Math.min(services.length - 4, sliderIndex + 1))}
-                disabled={sliderIndex >= services.length - 4}
-                className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white hover:bg-pink-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+          <div className="text-center mb-14 max-w-xl mx-auto">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/8 text-primary font-semibold text-[11px] uppercase tracking-wider mb-4">
+              <Sparkles className="h-3 w-3" />
+              Our Services
+            </span>
+            <h3 className="text-3xl lg:text-4xl font-black text-slate-900 leading-tight tracking-tight mb-3">
+              Exceptional Care for <span className="text-primary">Every Space</span>
+            </h3>
+            <p className="text-slate-500 text-base leading-relaxed">
+              Specialized teams equipped with professional-grade equipment delivering pristine results
+            </p>
           </div>
 
-          {/* Services Slider */}
-          <div className="relative overflow-hidden">
-            <motion.div 
-              ref={sliderRef}
-              className="flex gap-5"
-              animate={{ x: -sliderIndex * 300 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            >
-              {services.map((service, i) => (
-                <div key={i} className="relative h-72 w-68 rounded-2xl overflow-hidden shadow-md shrink-0 group">
-                  <a href={service.href} className="block h-full w-full">
-                    <img 
-                      src={service.image} 
-                      alt={service.title} 
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent" />
-                    
-                    <div className="absolute top-4 left-4 z-10">
-                      <span className="px-3 py-1 rounded-full bg-primary/90 text-[10px] font-semibold uppercase tracking-wider text-white">
-                        {service.tag}
-                      </span>
-                    </div>
+          {/* Static Services Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {services.map((service, i) => (
+              <motion.div 
+                key={i} 
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-40px' }}
+                variants={fadeUp}
+                custom={i % 4}
+                className="relative h-72 rounded-2xl overflow-hidden shadow-md group"
+              >
+                <a href={service.href} className="block h-full w-full">
+                  <img 
+                    src={service.image} 
+                    alt={service.title} 
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent" />
+                  
+                  <div className="absolute top-4 left-4 z-10">
+                    <span className="px-3 py-1 rounded-full bg-primary/90 text-[10px] font-semibold uppercase tracking-wider text-white">
+                      {service.tag}
+                    </span>
+                  </div>
 
-                    <div className="absolute bottom-5 left-5 right-5 z-10">
-                      <h3 className="text-lg font-bold text-white mb-1">{service.title}</h3>
-                      <p className="text-slate-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 mb-3">
-                        {service.description}
-                      </p>
-                      <span className="inline-flex items-center gap-1.5 text-white text-[11px] font-semibold">
-                        Book Service <ArrowRight className="h-3 w-3 text-primary" />
-                      </span>
-                    </div>
-                  </a>
-                </div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Slider Indicators */}
-          <div className="flex items-center justify-center gap-1.5 mt-6">
-            {Array.from({ length: Math.ceil(services.length / 4) }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setSliderIndex(i * 4)}
-                className={`h-1.5 rounded-full transition-all ${i * 4 === sliderIndex ? 'w-6 bg-primary' : 'w-1.5 bg-slate-300 hover:bg-slate-400'}`}
-              />
+                  <div className="absolute bottom-5 left-5 right-5 z-10">
+                    <h3 className="text-lg font-bold text-white mb-1">{service.title}</h3>
+                    <p className="text-slate-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 mb-3">
+                      {service.description}
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 text-white text-[11px] font-semibold">
+                      Book Service <ArrowRight className="h-3 w-3 text-primary" />
+                    </span>
+                  </div>
+                </a>
+              </motion.div>
             ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <a
+              href="/services"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-bold text-sm hover:bg-pink-700 transition-colors shadow-md shadow-primary/20"
+            >
+              View All Services <ArrowRight className="h-4 w-4" />
+            </a>
           </div>
         </div>
       </section>
@@ -635,8 +650,8 @@ export default function HomePage() {
               >
                 {[
                   {
-                    title: "Advanced Bio-Protocols",
-                    desc: "We use laboratory-tested solutions that are 99.9% effective against pathogens while remaining family safe.",
+                    title: "Advanced Cleaning Protocols",
+                    desc: "We use trusted, industry-grade solutions that are highly effective against pathogens while remaining safe for families and pets.",
                     icon: ShieldCheck
                   },
                   {
@@ -645,8 +660,8 @@ export default function HomePage() {
                     icon: Award
                   },
                   {
-                    title: "Zero-Latency Booking",
-                    desc: "Our real-time scheduling engine allows you to confirm your expert cleaner in under 60 seconds.",
+                    title: "Fast & Easy Booking",
+                    desc: "Our streamlined booking process allows you to schedule your expert cleaner quickly and conveniently.",
                     icon: Zap
                   }
                 ].map((item, i) => (

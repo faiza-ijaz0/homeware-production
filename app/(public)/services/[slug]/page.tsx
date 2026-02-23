@@ -639,17 +639,18 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ slug: 
               </p>
               <div className="flex flex-wrap justify-center gap-4 md:gap-6">
                 <a 
-                  href="tel:80046639675" 
-                  className="bg-primary text-white px-6 md:px-10 py-4 md:py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-600 transition-all flex items-center gap-3"
+                  href="https://homeworkuae.com/book-service" 
+                  className="bg-primary text-white px-6 md:px-10 py-4 md:py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-700 transition-all flex items-center gap-3"
                 >
-                  800 4663 9675
+                  Book Now
                 </a>
                 <a 
-                  href="mailto:services@homeworkuae.com" 
-                  className="bg-white/10 text-white border border-white/20 px-6 md:px-10 py-4 md:py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-white hover:text-slate-900 transition-all flex items-center gap-3"
+                  href="https://homeworkuae.com/book-service"
+                  className="bg-primary text-white px-6 md:px-10 py-4 md:py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-700 transition-all flex items-center gap-3"
                 >
-                  Email Us
+                  Book Now
                 </a>
+                
               </div>
             </div>
             <Sparkles className="absolute -bottom-8 -right-8 h-32 w-32 md:h-64 md:w-64 text-white/5 rotate-12 group-hover:scale-110 transition-transform duration-1000" />

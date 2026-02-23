@@ -232,8 +232,8 @@ export default function ACCoilCleaning() {
                 <div className="mt-12 p-8 bg-primary/10 rounded-3xl border border-primary/20 text-center">
                   <p className="text-sm font-bold text-primary mb-4 uppercase tracking-[0.2em]">Book Today</p>
                   <p className="text-2xl font-black text-white tracking-tighter mb-8 italic leading-tight uppercase">Restore Your<br />Cooling Flow</p>
-                  <a href="tel:80046639675" className="block w-full bg-primary text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-600 transition-all shadow-xl shadow-primary/30">
-                     800 4663 9675
+                  <a href="https://homeworkuae.com/book-service" className="block w-full bg-primary text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-700 transition-all shadow-xl shadow-primary/30">
+                     Book Now
                   </a>
                 </div>
               </motion.div>
@@ -333,12 +333,6 @@ export default function ACCoilCleaning() {
                 Make it a priority today and enjoy lower bills and a healthier environment in your UAE home.
               </p>
               <div className="flex flex-wrap justify-center gap-6">
-                <a href="tel:80046639675" className="bg-primary text-white px-10 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-600 transition-all flex items-center gap-3 shadow-2xl shadow-primary/40">
-                   800 4663 9675
-                </a>
-                <a href="mailto:services@homeworkuae.com" className="bg-white/10 text-white border border-white/20 px-10 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-white hover:text-slate-900 transition-all flex items-center gap-3">
-                   Request A Quote
-                </a>
                 <a href="https://homeworkuae.com/book-service" className="bg-primary text-white px-10 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-700 transition-all flex items-center gap-3">
                    Book Now
                 </a>

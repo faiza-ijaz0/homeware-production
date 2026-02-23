@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
@@ -95,154 +96,9 @@ const fetchServicesFromFirebase = async (): Promise<FirebaseService[]> => {
   }
 };
 
-// Success Modal Component
-const SuccessPopup = ({
-  isOpen,
-  onClose,
-  bookingDetails,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  bookingDetails: any;
-}) => {
-  if (!isOpen) return null;
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
-          >
-            <X className="h-5 w-5 text-slate-600" />
-          </button>
-
-          {/* Background Pattern */}
-          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-pink-500 to-purple-500" />
-
-          {/* Content */}
-          <div className="pt-14 pb-5 px-5">
-            {/* Success Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <div className="h-28 w-28 rounded-full bg-gradient-to-br from-emerald-100 to-green-100 flex items-center justify-center">
-                  <div className="h-20 w-20 rounded-full bg-gradient-to-br from-emerald-200 to-green-200 flex items-center justify-center shadow-lg">
-                    <Check className="h-12 w-12 text-emerald-600" />
-                  </div>
-                </div>
-                <div className="absolute -top-2 -right-2">
-                  <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center animate-pulse">
-                    <Sparkles className="h-5 w-5 text-white" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Title */}
-            <div className="text-center mb-2">
-              <h3 className="text-4xl font-black text-slate-900 mb-2">
-                Booking Successful! 🎉
-              </h3>
-              <p className="text-slate-500 font-medium">
-                Your cleaning session has been scheduled successfully
-              </p>
-            </div>
-
-            {/* Booking Details Card */}
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-6 mb-8 border border-slate-200 shadow-inner">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-white/50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-slate-400" />
-                    <span className="font-medium text-slate-600">Name</span>
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    {bookingDetails.name}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-white/50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-slate-400" />
-                    <span className="font-medium text-slate-600">Phone</span>
-                  </div>
-                  <span className="font-bold text-primary">
-                    {bookingDetails.phone}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-white/50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <ClipboardList className="h-5 w-5 text-slate-400" />
-                    <span className="font-medium text-slate-600">Service</span>
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    {bookingDetails.service}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-white/50 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-5 w-5 text-slate-400" />
-                    <span className="font-medium text-slate-600">Date</span>
-                  </div>
-                  <span className="font-bold text-slate-900">
-                    {bookingDetails.date}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Next Steps */}
-            <div className="space-y-1 mb-1">
-              <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-2xl">
-                <PhoneCall className="h-6 w-6 text-blue-500 shrink-0 mt-0.5" />
-                <div className="text-left">
-                  <p className="font-bold text-slate-900">
-                    Expect our call within 15 minutes
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    Our representative will call you shortly to confirm details
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="flex-1 py-2 bg-gradient-to-r from-primary to-pink-500 text-white rounded-2xl font-bold text-sm hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-primary/25"
-              >
-                Done, Got It
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-};
-
 export default function BookService() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [latestBooking, setLatestBooking] = useState<any>(null);
   const [firebaseServices, setFirebaseServices] = useState<FirebaseService[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(true);
 
@@ -344,29 +200,30 @@ export default function BookService() {
         const result = await saveBookingToFirebase(formData);
 
         if (result.success) {
-          // Store latest booking details for popup
-          setLatestBooking({
-            bookingRef: result.bookingRef,
-            ...formData,
-          });
+          // Send email notification
+          try {
+            const selectedServiceName = firebaseServices.find(s => s.id === formData.service)?.name || 'Service';
+            await fetch('/api/send-booking-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                clientName: formData.name,
+                clientEmail: formData.email,
+                clientPhone: formData.phone,
+                serviceName: selectedServiceName,
+                bookingDate: formData.date,
+                bookingTime: formData.time,
+                message: formData.message,
+                bookingId: result.bookingRef,
+              }),
+            });
+          } catch (emailError) {
+            console.error('Email notification failed:', emailError);
+            // Continue even if email fails
+          }
 
-          // Show success popup
-          setShowSuccessPopup(true);
-
-          // Reset form
-          setFormData({
-            name: "",
-            email: "",
-            phone: "",
-            service: "",
-            propertyType: "apartment",
-            area: "",
-            frequency: "once",
-            date: "",
-            time: "",
-            message: "",
-          });
-          setStep(1);
+          // Redirect to thank-you page
+          router.push(`/thank-you?booking-id=${result.bookingRef}`);
         }
       } catch (error: any) {
         console.error("Booking error:", error);
@@ -417,15 +274,6 @@ export default function BookService() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
-      {/* Success Popup */}
-      <SuccessPopup
-        isOpen={showSuccessPopup}
-        onClose={() => setShowSuccessPopup(false)}
-        bookingDetails={{
-          ...latestBooking,
-          service: latestBooking ? getServiceName(latestBooking.service) : "",
-        }}
-      />
 
       {/* Hero Header */}
       <section className="relative py-24 bg-slate-950 text-white overflow-hidden">

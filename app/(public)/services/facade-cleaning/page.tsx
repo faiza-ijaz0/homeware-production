@@ -236,10 +236,10 @@ export default function FacadeCleaning() {
                 </div>
 
                 <div className="mt-12 p-8 bg-primary/10 rounded-3xl border border-primary/20 text-center">
-                  <p className="text-sm font-bold text-primary mb-4 uppercase tracking-[0.2em]">Immediate Service</p>
+                  <p className="text-sm font-bold text-primary mb-4 uppercase tracking-[0.2em]">Book Your Service</p>
                   <p className="text-2xl font-black text-white tracking-tighter mb-8 italic leading-tight uppercase tracking-widest">RESTORE YOUR<br />SKYLINE</p>
-                  <a href="tel:80046639675" className="block w-full bg-primary text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-600 transition-all shadow-xl shadow-primary/30">
-                     800 4663 9675
+                  <a href="https://homeworkuae.com/book-service" className="block w-full bg-primary text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-pink-700 transition-all shadow-xl shadow-primary/30">
+                     Book Now
                   </a>
                 </div>
               </motion.div>

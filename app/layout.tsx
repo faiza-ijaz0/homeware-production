@@ -1,26 +1,34 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   preload: true,
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
   preload: true,
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Homework UAE - Professional Hygiene Solutions",
-  description: "UAE's premier hygiene solution provider, dedicated to creating fresh, clean, and productive environments for homes and offices.",
+  title: "Homework UAE - Best Deep Cleaning & Hygiene Services in Dubai | Since 2004",
+  description: "UAE's #1 professional deep cleaning company. Dubai Municipality approved. Residential, villa, office, AC duct, kitchen & post-construction cleaning. 20,000+ satisfied clients. Book now!",
+  keywords: "deep cleaning Dubai, best cleaning company UAE, villa cleaning Dubai, AC duct cleaning, office cleaning Dubai, post construction cleaning, professional cleaning services, Dubai Municipality approved cleaning, move in cleaning Dubai, kitchen deep cleaning",
+  openGraph: {
+    title: "Homework UAE - Best Deep Cleaning Company 2025",
+    description: "Professional deep cleaning & hygiene solutions across the UAE. Dubai Municipality approved. 20,000+ happy clients.",
+    type: "website",
+    locale: "en_AE",
+    siteName: "Homework UAE",
+  },
 };
 
 export default function RootLayout({
@@ -50,7 +58,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <link rel="prefetch" href="/about" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${playfair.variable} antialiased`}
         suppressHydrationWarning
       >
         {/* Google Tag Manager (noscript) */}
