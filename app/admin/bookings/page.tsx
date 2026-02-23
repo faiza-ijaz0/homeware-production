@@ -43,7 +43,7 @@ import {
 } from 'lucide-react'
 
 import { db } from '@/lib/firebase'
-import { collection, getDocs, query, orderBy, deleteDoc, doc, updateDoc, where, Timestamp, onSnapshot } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, deleteDoc, doc, updateDoc, where, Timestamp, onSnapshot, addDoc } from 'firebase/firestore'
 import { format, addDays, startOfDay, addMinutes, isSameDay, parseISO } from 'date-fns'
 
 interface Booking {
@@ -436,11 +436,64 @@ export default function AdminBookings() {
 
   const handleStatusChange = async (bookingId: string, newStatus: Booking['status']) => {
     try {
+      const booking = bookings.find(b => b.id === bookingId)
+      
       const bookingRef = doc(db, 'bookings', bookingId)
       await updateDoc(bookingRef, {
         status: newStatus,
         updatedAt: Timestamp.now()
       })
+      
+      // AUTO-CREATE CLIENT when booking is approved (accepted or confirmed)
+      if ((newStatus === 'accepted' || newStatus === 'confirmed') && booking) {
+        // Check if client with this email already exists
+        const existingClientQuery = query(
+          collection(db, 'clients'),
+          where('email', '==', booking.clientEmail)
+        )
+        const existingClients = await getDocs(existingClientQuery)
+        
+        // Only create if client doesn't exist
+        if (existingClients.empty) {
+          try {
+            const clientDoc = {
+              name: booking.clientName,
+              email: booking.clientEmail,
+              phone: booking.clientPhone,
+              company: booking.clientName, // Use client name as company initially
+              location: booking.clientAddress,
+              totalSpent: booking.estimatedPrice,
+              projects: 1,
+              tier: 'Bronze',
+              status: 'Active',
+              notes: `Auto-created from booking: ${booking.serviceName}`,
+              joinDate: new Date().toISOString().split('T')[0],
+              lastService: booking.serviceName,
+              contracts: [],
+              source: 'booking', // Track that this came from a booking
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+            
+            // Create client in Firebase
+            await addDoc(collection(db, 'clients'), clientDoc)
+            
+            // Update booking with clientId reference
+            const existingClientsAfterCreate = await getDocs(
+              query(collection(db, 'clients'), where('email', '==', booking.clientEmail))
+            )
+            if (!existingClientsAfterCreate.empty) {
+              const newClientId = existingClientsAfterCreate.docs[0].id
+              await updateDoc(bookingRef, {
+                clientId: newClientId
+              })
+            }
+          } catch (clientError) {
+            console.error('Error creating client from booking:', clientError)
+            // Don't fail the booking approval if client creation fails
+          }
+        }
+      }
       
       setBookings(bookings.map(b =>
         b.id === bookingId ? { ...b, status: newStatus, updatedAt: new Date().toISOString().split('T')[0] } : b

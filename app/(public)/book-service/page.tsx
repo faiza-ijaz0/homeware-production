@@ -193,40 +193,46 @@ export default function BookService() {
           !formData.service ||
           !formData.date
         ) {
+          alert('Please fill in all required fields');
           return;
         }
 
-        // Save to Firebase
+        // Save to Firebase first and wait for confirmation
         const result = await saveBookingToFirebase(formData);
 
-        if (result.success) {
-          // Send email notification
-          try {
-            const selectedServiceName = firebaseServices.find(s => s.id === formData.service)?.name || 'Service';
-            await fetch('/api/send-booking-email', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                clientName: formData.name,
-                clientEmail: formData.email,
-                clientPhone: formData.phone,
-                serviceName: selectedServiceName,
-                bookingDate: formData.date,
-                bookingTime: formData.time,
-                message: formData.message,
-                bookingId: result.bookingRef,
-              }),
-            });
-          } catch (emailError) {
-            console.error('Email notification failed:', emailError);
-            // Continue even if email fails
-          }
-
-          // Redirect to thank-you page
-          router.push('/thank-you');
+        // Only proceed if booking was successfully saved
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to save booking to database');
         }
+
+        // Send email notification (non-blocking)
+        try {
+          const selectedServiceName = firebaseServices.find(s => s.id === formData.service)?.name || 'Service';
+          await fetch('/api/send-booking-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientName: formData.name,
+              clientEmail: formData.email,
+              clientPhone: formData.phone,
+              serviceName: selectedServiceName,
+              bookingDate: formData.date,
+              bookingTime: formData.time,
+              message: formData.message,
+              bookingId: result.bookingRef,
+            }),
+          });
+        } catch (emailError) {
+          console.error('Email notification failed:', emailError);
+          // Continue even if email fails - booking is already saved
+        }
+
+        // Only redirect after booking is confirmed saved
+        router.push('/booking-thank-you');
+        
       } catch (error: any) {
-        console.error("Booking error:", error);
+        console.error("Booking submission error:", error);
+        alert(`Error submitting booking: ${error?.message || 'Please try again.'}`);
       }
     }
   };

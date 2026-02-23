@@ -259,42 +259,43 @@ function BookingPageContent() {
         clientAddress: formData.clientAddress
       }
 
-      // Save to Firebase
+      // Save to Firebase first and wait for confirmation
       const result = await saveBookingToFirebase(bookingData)
 
-      if (result.success) {
-        const bookingId = result.bookingRef || ''
-        
-        // Send email notification
-        try {
-          await fetch('/api/send-booking-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              clientName: formData.clientName,
-              clientEmail: formData.clientEmail,
-              clientPhone: formData.clientPhone,
-              serviceName: selectedService?.name || 'Service',
-              bookingDate: formData.bookingDate,
-              bookingTime: formData.bookingTime,
-              message: formData.notes,
-              bookingId: bookingId,
-            }),
-          })
-        } catch (emailError) {
-          console.error('Email notification failed:', emailError)
-          // Continue even if email fails
-        }
-        
-        // Redirect to thank-you page
-        router.push('/thank-you')
-      } else {
-        throw new Error(result.error || 'Failed to save booking')
+      // Only proceed if booking was successfully saved
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save booking to database')
       }
+
+      const bookingId = result.bookingRef || ''
+      
+      // Send email notification (non-blocking)
+      try {
+        await fetch('/api/send-booking-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientName: formData.clientName,
+            clientEmail: formData.clientEmail,
+            clientPhone: formData.clientPhone,
+            serviceName: selectedService?.name || 'Service',
+            bookingDate: formData.bookingDate,
+            bookingTime: formData.bookingTime,
+            message: formData.notes,
+            bookingId: bookingId,
+          }),
+        })
+      } catch (emailError) {
+        console.error('Email notification failed:', emailError)
+        // Continue even if email fails - booking is already saved
+      }
+      
+      // Only redirect after booking is confirmed saved
+      router.push('/booking-thank-you')
+      
     } catch (error) {
-      console.error('Booking error:', error)
-      alert('Error saving booking. Please try again.')
-    } finally {
+      console.error('Booking submission error:', error)
+      alert(`Error submitting booking: ${error instanceof Error ? error.message : 'Please try again.'}`)
       setIsSubmitting(false)
     }
   }

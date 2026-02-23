@@ -144,37 +144,39 @@ export default function BookingForm({ preselectedServiceName }: BookingFormProps
         source: 'service-page-booking'
       }
 
-      // Save to Firebase
+      // Save to Firebase first and wait for confirmation
       const result = await saveBookingToFirebase(bookingData)
 
-      if (result.success) {
-        // Send email notification to services@homeworkuae.com
-        try {
-          await fetch('/api/send-booking-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              clientName: formData.name,
-              clientEmail: formData.email,
-              clientPhone: formData.phone,
-              serviceName: selectedService?.name || 'Service',
-              message: formData.message,
-              bookingId: result.bookingId,
-            }),
-          })
-        } catch (emailError) {
-          console.error('Email notification failed:', emailError)
-          // Continue with success even if email fails
-        }
-        
-        // Redirect to thank you page
-        router.push('/thank-you')
-      } else {
-        throw new Error(result.error || 'Failed to submit booking')
+      // Only proceed if booking was successfully saved
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save booking to database')
       }
+
+      // Send email notification (non-blocking)
+      try {
+        await fetch('/api/send-booking-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientName: formData.name,
+            clientEmail: formData.email,
+            clientPhone: formData.phone,
+            serviceName: selectedService?.name || 'Service',
+            message: formData.message,
+            bookingId: result.bookingId,
+          }),
+        })
+      } catch (emailError) {
+        console.error('Email notification failed:', emailError)
+        // Continue with success even if email fails - booking is already saved
+      }
+      
+      // Only redirect after booking is confirmed saved
+      router.push('/booking-thank-you')
+      
     } catch (error) {
-      console.error('Booking error:', error)
-      alert('Error submitting booking. Please try again.')
+      console.error('Booking submission error:', error)
+      alert(`Error submitting booking: ${error instanceof Error ? error.message : 'Please try again.'}`)
     } finally {
       setIsSubmitting(false)
     }
