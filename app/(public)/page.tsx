@@ -1,7 +1,7 @@
 "use client"
 
-import { 
-  CheckCircle2, ArrowRight, Star, Shield, Clock, Users, Award, Sparkles, 
+import {
+  CheckCircle2, ArrowRight, Star, Shield, Clock, Users, Award, Sparkles,
   ShieldCheck, Zap, ChevronLeft, ChevronRight,
   Home, Building2, Wind, ShieldAlert, Utensils, Construction,
   Sofa, Layout, Waves, Dumbbell, Calendar, BookOpen, ArrowUpRight
@@ -15,7 +15,7 @@ import { INITIAL_TESTIMONIALS } from '@/lib/testimonials-data'
 interface CTAButtonProps {
   text: string
   href: string
-  variant?: "primary" | "secondary" | "dark" 
+  variant?: "primary" | "secondary" | "dark"
   icon?: React.ComponentType<{ className?: string }> | null
   className?: string
 }
@@ -27,9 +27,9 @@ const CTAButton = ({ text, href, variant = "primary", icon: Icon = null, classNa
     secondary: "bg-white text-primary hover:bg-slate-50 shadow-md",
     dark: "bg-slate-900 text-white hover:bg-slate-800 shadow-md",
   }
-  
+
   return (
-    <a 
+    <a
       href={href}
       className={`${baseStyles} ${variants[variant]} inline-flex items-center gap-2 hover:-translate-y-0.5 ${className}`}
     >
@@ -72,7 +72,7 @@ export default function HomePage() {
 
   // Services data with Icons
   const services = [
-    { title: "Residential Cleaning", href: "/services/residential-cleaning", icon: <Home className="h-7 w-7" />, description: "Regular hourly cleaning for homes", image: "https://images.unsplash.com/photo-1581578731548-c64695cc6958?auto=format&fit=crop&q=80&w=800", tag: "Regular" },
+    { title: "Residential Cleaning", href: "/services/residential-cleaning", icon: <Home className="h-7 w-7" />, description: "Regular hourly cleaning for homes", image: "https://images.unsplash.com/photo-1742483359033-13315b247c74?q=80&w=1288&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", tag: "Regular" },
     { title: "Villa Deep Cleaning", href: "/services/villa-deep-cleaning", icon: <Building2 className="h-7 w-7" />, description: "Complete interior and exterior sanitization", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
     { title: "AC Duct Cleaning", href: "/services/ac-duct-cleaning", icon: <Wind className="h-7 w-7" />, description: "Professional air duct sterilization", image: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&q=80&w=800", tag: "Technical" },
     { title: "Office Deep Cleaning", href: "/services/office-deep-cleaning", icon: <ShieldAlert className="h-7 w-7" />, description: "Corporate space sanitization", image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
@@ -81,7 +81,7 @@ export default function HomePage() {
     { title: "Post Construction Cleaning", href: "/services/post-construction-cleaning", icon: <Construction className="h-7 w-7" />, description: "Remove dust and construction residue", image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=800", tag: "Specialist" },
     { title: "Sofa Deep Cleaning", href: "/services/sofa-deep-cleaning", icon: <Sofa className="h-7 w-7" />, description: "Professional upholstery cleaning", image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800", tag: "Specialist" },
     { title: "Window Cleaning", href: "/services/window-cleaning", icon: <Layout className="h-7 w-7" />, description: "Interior and exterior window service", image: "https://images.unsplash.com/photo-1596204976717-1a9ff47f74ef?auto=format&fit=crop&q=80&w=800", tag: "Regular" },
-    { title: "Carpet Deep Cleaning", href: "/services/carpets-deep-cleaning", icon: <Sparkles className="h-7 w-7" />, description: "Professional carpet and rug cleaning", image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?auto=format&fit=crop&q=80&w=800", tag: "Deep" },
+    { title: "Carpet Deep Cleaning", href: "/services/carpets-deep-cleaning", icon: <Sparkles className="h-7 w-7" />, description: "Professional carpet and rug cleaning", image: "https://plus.unsplash.com/premium_photo-1677234146637-99562eb0ac54?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", tag: "Deep" },
     { title: "Water Tank Cleaning", href: "/services/water-tank-cleaning", icon: <Waves className="h-7 w-7" />, description: "Safe water tank sanitization", image: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=800", tag: "Technical" },
     { title: "Gym Deep Cleaning", href: "/services/gym-deep-cleaning", icon: <Dumbbell className="h-7 w-7" />, description: "Equipment and facility sanitization", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800", tag: "Deep" }
   ]
@@ -119,7 +119,7 @@ export default function HomePage() {
   useEffect(() => {
     setIsClient(true)
     let isMounted = true
-    
+
     const fetchAirQualityData = async () => {
       if (!isMounted) return
       try {
@@ -127,16 +127,16 @@ export default function HomePage() {
         const response = await fetch(
           'https://air-quality-api.open-meteo.com/v1/air_quality?latitude=25.2048&longitude=55.2708&current=us_aqi'
         )
-        
+
         if (!isMounted) return
-        
+
         const data = await response.json()
-        
+
         if (!isMounted) return
-        
+
         const aqi = Math.round(data.current?.us_aqi || 72)
         const { status, color } = getAirQualityStatus(aqi)
-        
+
         setAirQuality(Math.min(aqi, 100))
         setAirQualityStatus(status)
         setAirQualityColor(color)
@@ -147,9 +147,9 @@ export default function HomePage() {
         setLoading(false)
       }
     }
-    
+
     fetchAirQualityData()
-    
+
     // Fetch real-time air quality every 10 minutes
     const airQualityInterval = setInterval(() => {
       if (isMounted) fetchAirQualityData()
@@ -161,7 +161,7 @@ export default function HomePage() {
         setTextIndex((prev) => (prev + 1) % heroTexts.length)
       }
     }, 4000)
-    
+
     return () => {
       isMounted = false
       clearInterval(airQualityInterval)
@@ -179,7 +179,7 @@ export default function HomePage() {
     <div ref={containerRef} className="flex flex-col overflow-hidden selection:bg-primary selection:text-white">
 
       {/* Hero Section - Clean Premium */}
-      <section 
+      <section
         className="relative pt-16 pb-24 px-4 md:px-8 min-h-[88vh] flex items-center overflow-hidden"
       >
         {/* Subtle background */}
@@ -191,7 +191,7 @@ export default function HomePage() {
 
         <div className="container mx-auto relative z-20">
           <div className="flex flex-col lg:flex-row items-center gap-16">
-            
+
             {/* Left Content */}
             <motion.div
               initial="hidden"
@@ -206,7 +206,7 @@ export default function HomePage() {
                 </motion.div>
 
                 <div className="relative">
-                  <motion.h1 
+                  <motion.h1
                     key={textIndex}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -224,10 +224,10 @@ export default function HomePage() {
                 </motion.p>
 
                 <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-5 mt-10">
-                  <CTAButton 
-                    text="Get Started" 
-                    href="/book-service" 
-                    variant="primary" 
+                  <CTAButton
+                    text="Get Started"
+                    href="/book-service"
+                    variant="primary"
                     icon={ArrowUpRight}
                   />
                   <div className="flex -space-x-3">
@@ -252,17 +252,20 @@ export default function HomePage() {
             {/* Right Content: Video Card & Widgets */}
             <div className="w-full lg:w-2/5 relative">
               <div className="relative aspect-square max-w-[460px] mx-auto">
-                
+
                 {/* Main Image Card */}
                 <div className="absolute inset-0 bg-slate-900 rounded-3xl overflow-hidden shadow-2xl z-20">
-                  <img 
-                    src="https://images.unsplash.com/photo-1581578731548-c64695cc6958?auto=format&fit=crop&q=80&w=1200" 
+                  <iframe
+                    src="https://www.youtube.com/embed/WvrSfqRtRwQ?autoplay=1&mute=1&loop=1&playlist=WvrSfqRtRwQ"
+                    title="HomeWork UAE Cleaning Services"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
                     className="w-full h-full object-cover"
-                    alt="Professional Cleaning Service - Bright Modern Home"
+                    style={{ border: 'none' }}
                   />
-                  
+
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
-                  
+
                   <div className="absolute bottom-6 left-6 right-6">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="flex gap-0.5">
@@ -452,7 +455,7 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">Everything You Need</h2>
             <p className="text-slate-500 max-w-xl mx-auto text-sm">Comprehensive cleaning solutions delivered with precision and care</p>
           </motion.div>
-          
+
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
             {services.map((service, i) => (
               <motion.a
@@ -492,7 +495,7 @@ export default function HomePage() {
               Setting new standards in the cleaning industry with unwavering commitment to quality and transparency
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-6 items-stretch">
             <motion.div
               initial="hidden"
@@ -510,7 +513,7 @@ export default function HomePage() {
                 To be the first choice for our customers, employees, and suppliers in the regions we operate.
               </p>
             </motion.div>
-            
+
             <motion.div
               initial="hidden"
               whileInView="visible"
@@ -577,8 +580,8 @@ export default function HomePage() {
           {/* Static Services Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {services.map((service, i) => (
-              <motion.div 
-                key={i} 
+              <motion.div
+                key={i}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: '-40px' }}
@@ -587,13 +590,13 @@ export default function HomePage() {
                 className="relative h-72 rounded-2xl overflow-hidden shadow-md group"
               >
                 <a href={service.href} className="block h-full w-full">
-                  <img 
-                    src={service.image} 
-                    alt={service.title} 
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  <img
+                    src={service.image}
+                    alt={service.title}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent" />
-                  
+
                   <div className="absolute top-4 left-4 z-10">
                     <span className="px-3 py-1 rounded-full bg-primary/90 text-[10px] font-semibold uppercase tracking-wider text-white">
                       {service.tag}
@@ -709,7 +712,7 @@ export default function HomePage() {
                       </div>
                     ))}
                   </div>
-                  <a 
+                  <a
                     href="https://wa.me/80046639675"
                     className="block w-full h-12 bg-white text-slate-900 rounded-xl text-center leading-[3rem] font-bold text-sm hover:bg-slate-100 transition-colors"
                   >
@@ -739,14 +742,14 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => setBlogSliderIndex(Math.max(0, blogSliderIndex - 1))}
                 disabled={blogSliderIndex === 0}
                 className="h-10 w-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <button 
+              <button
                 onClick={() => setBlogSliderIndex(Math.min(blogs.length - 3, blogSliderIndex + 1))}
                 disabled={blogSliderIndex >= blogs.length - 3}
                 className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white hover:bg-pink-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
@@ -758,7 +761,7 @@ export default function HomePage() {
 
           {/* Blog Slider */}
           <div className="relative overflow-hidden">
-            <motion.div 
+            <motion.div
               className="flex gap-5"
               animate={{ x: -blogSliderIndex * 380 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -767,10 +770,10 @@ export default function HomePage() {
                 <article key={i} className="relative w-[360px] rounded-2xl overflow-hidden shadow-sm border border-slate-100 shrink-0 bg-white group hover:shadow-lg transition-shadow duration-300">
                   <a href={blog.href} className="block cursor-pointer">
                     <div className="relative h-48 overflow-hidden">
-                      <img 
-                        src={blog.image} 
-                        alt={blog.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      <img
+                        src={blog.image}
+                        alt={blog.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-3 left-3">
                         <span className="px-3 py-1 rounded-full bg-primary/90 text-[10px] font-semibold uppercase tracking-wider text-white">
@@ -778,7 +781,7 @@ export default function HomePage() {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="p-6">
                       <div className="flex items-center gap-3 mb-3 text-[11px] text-slate-400">
                         <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{blog.date}</span>
@@ -806,9 +809,8 @@ export default function HomePage() {
               <button
                 key={i}
                 onClick={() => setBlogSliderIndex(i)}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === blogSliderIndex ? 'w-6 bg-primary' : 'w-1.5 bg-slate-300 hover:bg-slate-400'
-                }`}
+                className={`h-1.5 rounded-full transition-all ${i === blogSliderIndex ? 'w-6 bg-primary' : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                  }`}
               />
             ))}
           </div>
@@ -840,7 +842,7 @@ export default function HomePage() {
 
           {/* Infinite Testimonials Carousel */}
           <div className="relative overflow-hidden">
-            <motion.div 
+            <motion.div
               className="flex gap-5"
               animate={{ x: [0, -testimonials.length * 380] }}
               transition={{
@@ -862,10 +864,10 @@ export default function HomePage() {
                     &ldquo;{testimonial.text}&rdquo;
                   </p>
                   <div className="flex items-center gap-3 pt-4 border-t border-slate-100 mt-auto">
-                    <img 
-                      src={testimonial.image} 
-                      alt={testimonial.name} 
-                      className="w-10 h-10 rounded-lg object-cover" 
+                    <img
+                      src={testimonial.image}
+                      alt={testimonial.name}
+                      className="w-10 h-10 rounded-lg object-cover"
                     />
                     <div>
                       <h4 className="font-bold text-slate-900 text-sm">{testimonial.name}</h4>
@@ -894,7 +896,7 @@ export default function HomePage() {
             className="bg-gradient-to-br from-primary to-pink-700 rounded-2xl p-12 md:p-16 relative overflow-hidden shadow-xl"
           >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1),transparent_70%)]" />
-            
+
             <div className="relative z-10 max-w-3xl mx-auto text-center space-y-8">
               <div>
                 <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight mb-4">
@@ -905,14 +907,14 @@ export default function HomePage() {
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-4">
-                <a 
-                  href="/book-service" 
+                <a
+                  href="/book-service"
                   className="bg-white text-primary px-8 py-3.5 rounded-full font-bold text-sm hover:bg-slate-50 transition-colors inline-flex items-center gap-2"
                 >
                   Start Booking Now <ArrowRight className="h-4 w-4" />
                 </a>
-                <a 
-                  href="/quote" 
+                <a
+                  href="/quote"
                   className="bg-white/15 text-white border border-white/25 px-8 py-3.5 rounded-full font-bold text-sm hover:bg-white/25 transition-colors inline-flex items-center gap-2"
                 >
                   Check Availability <ChevronRight className="h-4 w-4" />
@@ -953,4 +955,4 @@ export default function HomePage() {
     </div>
   )
 }
-    
+
