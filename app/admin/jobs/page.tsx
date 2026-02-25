@@ -151,6 +151,17 @@
 //   status: string
 // }
 
+// // ✅ Updated Client/Lead interface
+// interface ClientLead {
+//   id: string
+//   name: string
+//   company: string
+//   email: string
+//   phone: string
+//   type: 'client' | 'lead'
+//   status?: string
+// }
+
 // interface NewJobForm {
 //   title: string
 //   client: string
@@ -182,7 +193,7 @@
 //   const router = useRouter()
 //   const [jobs, setJobs] = useState<Job[]>([])
 //   const [employees, setEmployees] = useState<Employee[]>([])
-//   const [clients, setClients] = useState<any[]>([])
+//   const [clients, setClients] = useState<ClientLead[]>([]) // ✅ Combined clients and leads
 //   const [equipment, setEquipment] = useState<Equipment[]>([]) // State for equipment
 //   const [permits, setPermits] = useState<PermitLicense[]>([]) // State for permits
 //   const [services, setServices] = useState<ServiceItem[]>([]) // State for services
@@ -226,7 +237,7 @@
 //     selectedServices: []
 //   })
 
-//   // Fetch jobs, employees, clients, equipment, permits and services from Firebase
+//   // Fetch jobs, employees, clients (with Won/Qualified leads), equipment, permits and services from Firebase
 //   useEffect(() => {
 //     const fetchData = async () => {
 //       try {
@@ -298,16 +309,45 @@
         
 //         setEmployees(employeesData)
 
-//         // Fetch clients
+//         // ✅ Fetch ALL clients
+//         const clientsList: ClientLead[] = []
 //         const clientsQuery = query(collection(db, 'clients'))
 //         const clientsSnapshot = await getDocs(clientsQuery)
-        
-//         const clientsData = clientsSnapshot.docs.map(doc => ({
-//           id: doc.id,
-//           ...doc.data()
-//         }))
-        
-//         setClients(clientsData)
+//         clientsSnapshot.forEach((doc) => {
+//           const data = doc.data()
+//           clientsList.push({
+//             id: doc.id,
+//             name: data.name || '',
+//             company: data.company || '',
+//             email: data.email || '',
+//             phone: data.phone || '',
+//             type: 'client',
+//             status: data.status || 'Active'
+//           })
+//         })
+
+//         // ✅ Fetch ONLY Won and Qualified leads
+//         const leadsList: ClientLead[] = []
+//         const leadsQuery = query(
+//           collection(db, 'leads'),
+//           where('status', 'in', ['Won', 'Qualified'])
+//         )
+//         const leadsSnapshot = await getDocs(leadsQuery)
+//         leadsSnapshot.forEach((doc) => {
+//           const data = doc.data()
+//           leadsList.push({
+//             id: doc.id,
+//             name: data.name || '',
+//             company: data.company || '',
+//             email: data.email || '',
+//             phone: data.phone || '',
+//             type: 'lead',
+//             status: data.status || 'Won'
+//           })
+//         })
+
+//         // ✅ Combine and sort clients and leads
+//         setClients([...clientsList, ...leadsList].sort((a, b) => a.name.localeCompare(b.name)))
 
 //         // Fetch equipment
 //         const equipmentQuery = query(collection(db, 'equipment'))
@@ -1304,16 +1344,32 @@
 //                       }}
 //                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
 //                     >
-//                       <option value="">Select a client</option>
-//                       {clients.map((client) => (
-//                         <option key={client.id} value={client.id}>
-//                           {client.name}
-//                         </option>
-//                       ))}
+//                       <option value="">Select a client or lead...</option>
+                      
+//                       {/* ✅ Clients Section */}
+//                       <optgroup label="━━━━ Clients ━━━━" className="font-bold text-gray-700">
+//                         {clients.filter(c => c.type === 'client').map((client) => (
+//                           <option key={`client-${client.id}`} value={client.id}>
+//                             {client.name} - {client.company} (Client)
+//                           </option>
+//                         ))}
+//                       </optgroup>
+                      
+//                       {/* ✅ Won & Qualified Leads Section */}
+//                       <optgroup label="━━━━ Won/Qualified Leads ━━━━" className="font-bold text-gray-700">
+//                         {clients.filter(c => c.type === 'lead').map((lead) => (
+//                           <option key={`lead-${lead.id}`} value={lead.id}>
+//                             {lead.name} - {lead.company} ({lead.status} Lead)
+//                           </option>
+//                         ))}
+//                       </optgroup>
 //                     </select>
 //                     {newJobForm.clientId === null && newJobForm.client && (
 //                       <p className="text-sm text-gray-500 mt-1">Client will be saved as: {newJobForm.client}</p>
 //                     )}
+//                     <p className="text-xs text-gray-400 mt-1">
+//                       {clients.filter(c => c.type === 'client').length} clients & {clients.filter(c => c.type === 'lead').length} qualified/won leads
+//                     </p>
 //                   </div>
 //                 </div>
 
@@ -2158,7 +2214,6 @@
 //   )
 // }
 
-
 // new code
 'use client'
 
@@ -2216,8 +2271,8 @@ interface Job {
   slaDeadline?: string
   estimatedDuration: string
   requiredSkills: string[]
-  equipment: string[] // Changed from permits to equipment
-  permits: string[] // New field for permits
+  equipment: string[] 
+  permits: string[]
   tags: string[]
   specialInstructions?: string
   recurring: boolean
@@ -2227,6 +2282,7 @@ interface Job {
   executionLogs: any[]
   assignedTo: string[]
   assignedEmployees: { id: string; name: string; email: string }[]
+  jobCreatedBy: string // 👈 NEW FIELD ADDED
   reminderEnabled?: boolean
   reminderDate?: string
   reminderSent?: boolean
@@ -2235,7 +2291,7 @@ interface Job {
   overtimeHours?: number
   overtimeReason?: string
   overtimeApproved?: boolean
-  tasks?: JobTask[] // New field for tasks
+  tasks?: JobTask[]
 }
 
 interface JobService {
@@ -2247,12 +2303,11 @@ interface JobService {
   description?: string
 }
 
-// New interface for tasks
 interface JobTask {
   id: string
   title: string
   description: string
-  duration: number // Duration in hours
+  duration: number
   completed: boolean
 }
 
@@ -2282,7 +2337,7 @@ interface PermitLicense {
   renewalDate: string
   status: string
   createdAt: string
-  pdfUrl?: string // New field for PDF file
+  pdfUrl?: string
 }
 
 interface ServiceItem {
@@ -2313,7 +2368,6 @@ interface Employee {
   status: string
 }
 
-// ✅ Updated Client/Lead interface
 interface ClientLead {
   id: string
   name: string
@@ -2344,21 +2398,22 @@ interface NewJobForm {
   specialInstructions: string
   recurring: boolean
   selectedEmployees: string[]
+  jobCreatedBy: string // 👈 NEW FIELD ADDED
   services?: JobService[]
-  tasks?: JobTask[] // New field for tasks
-  selectedEquipment: string[] // New field for selected equipment
-  selectedPermits: string[] // New field for selected permits
-  selectedServices: string[] // New field for selected services
+  tasks?: JobTask[]
+  selectedEquipment: string[]
+  selectedPermits: string[]
+  selectedServices: string[]
 }
 
 export default function JobsPage() {
   const router = useRouter()
   const [jobs, setJobs] = useState<Job[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
-  const [clients, setClients] = useState<ClientLead[]>([]) // ✅ Combined clients and leads
-  const [equipment, setEquipment] = useState<Equipment[]>([]) // State for equipment
-  const [permits, setPermits] = useState<PermitLicense[]>([]) // State for permits
-  const [services, setServices] = useState<ServiceItem[]>([]) // State for services
+  const [clients, setClients] = useState<ClientLead[]>([])
+  const [equipment, setEquipment] = useState<Equipment[]>([])
+  const [permits, setPermits] = useState<PermitLicense[]>([])
+  const [services, setServices] = useState<ServiceItem[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
@@ -2370,7 +2425,7 @@ export default function JobsPage() {
   const [editingJobId, setEditingJobId] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [showTasksSection, setShowTasksSection] = useState(false) // For tasks visibility
+  const [showTasksSection, setShowTasksSection] = useState(false)
 
   const [newJobForm, setNewJobForm] = useState<NewJobForm>({
     title: '',
@@ -2392,6 +2447,7 @@ export default function JobsPage() {
     specialInstructions: '',
     recurring: false,
     selectedEmployees: [],
+    jobCreatedBy: '', // 👈 NEW FIELD INITIALIZED
     services: [],
     tasks: [],
     selectedEquipment: [],
@@ -2399,7 +2455,7 @@ export default function JobsPage() {
     selectedServices: []
   })
 
-  // Fetch jobs, employees, clients (with Won/Qualified leads), equipment, permits and services from Firebase
+  // Fetch jobs, employees, clients, equipment, permits and services from Firebase
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -2428,8 +2484,8 @@ export default function JobsPage() {
             slaDeadline: data.slaDeadline || '',
             estimatedDuration: data.estimatedDuration || '',
             requiredSkills: data.requiredSkills || [],
-            equipment: data.equipment || [], // Changed from permits to equipment
-            permits: data.permits || [], // New field for permits
+            equipment: data.equipment || [],
+            permits: data.permits || [],
             tags: data.tags || [],
             specialInstructions: data.specialInstructions || '',
             recurring: data.recurring || false,
@@ -2439,11 +2495,12 @@ export default function JobsPage() {
             executionLogs: data.executionLogs || [],
             assignedTo: data.assignedTo || [],
             assignedEmployees: data.assignedEmployees || [],
+            jobCreatedBy: data.jobCreatedBy || '', // 👈 NEW FIELD FROM DATABASE
             reminderEnabled: data.reminderEnabled || false,
             reminderDate: data.reminderDate || '',
             reminderSent: data.reminderSent || false,
             services: data.services || [],
-            tasks: data.tasks || [], // Include tasks
+            tasks: data.tasks || [],
             overtimeRequired: data.overtimeRequired || false,
             overtimeHours: data.overtimeHours || 0,
             overtimeReason: data.overtimeReason || '',
@@ -2471,7 +2528,7 @@ export default function JobsPage() {
         
         setEmployees(employeesData)
 
-        // ✅ Fetch ALL clients
+        // Fetch ALL clients
         const clientsList: ClientLead[] = []
         const clientsQuery = query(collection(db, 'clients'))
         const clientsSnapshot = await getDocs(clientsQuery)
@@ -2488,7 +2545,7 @@ export default function JobsPage() {
           })
         })
 
-        // ✅ Fetch ONLY Won and Qualified leads
+        // Fetch ONLY Won and Qualified leads
         const leadsList: ClientLead[] = []
         const leadsQuery = query(
           collection(db, 'leads'),
@@ -2508,7 +2565,6 @@ export default function JobsPage() {
           })
         })
 
-        // ✅ Combine and sort clients and leads
         setClients([...clientsList, ...leadsList].sort((a, b) => a.name.localeCompare(b.name)))
 
         // Fetch equipment
@@ -2594,7 +2650,6 @@ export default function JobsPage() {
     fetchData()
   }, [])
 
-  // ========== EDIT FUNCTION ==========
   const handleEditJob = async (jobId: string) => {
     try {
       setLoading(true)
@@ -2604,17 +2659,14 @@ export default function JobsPage() {
       if (jobSnapshot.exists()) {
         const jobData = jobSnapshot.data()
         
-        // Convert equipment array to selectedEquipment array
         const selectedEquipment = equipment
           .filter(eq => jobData.equipment?.includes(eq.name))
           .map(eq => eq.id)
 
-        // Convert permits array to selectedPermits array
         const selectedPermits = permits
           .filter(p => jobData.permits?.includes(p.name))
           .map(p => p.id)
 
-        // Convert services array to selectedServices array
         const selectedServices = services
           .filter(svc => jobData.services?.some((s: any) => s.name === svc.name))
           .map(svc => svc.id)
@@ -2639,6 +2691,7 @@ export default function JobsPage() {
           specialInstructions: jobData.specialInstructions || '',
           recurring: jobData.recurring || false,
           selectedEmployees: jobData.assignedEmployees?.map((emp: any) => emp.id) || [],
+          jobCreatedBy: jobData.jobCreatedBy || '', // 👈 NEW FIELD ADDED TO EDIT
           services: jobData.services || [],
           tasks: jobData.tasks || [],
           selectedEquipment: selectedEquipment,
@@ -2657,21 +2710,17 @@ export default function JobsPage() {
     }
   }
 
-  // ========== VIEW FUNCTION ==========
   const handleViewJob = (jobId: string) => {
     router.push(`/admin/jobs/${jobId}`)
   }
 
-  // ========== DELETE FUNCTION ==========
   const handleDeleteJob = async (jobId: string) => {
     try {
       setLoading(true)
       
-      // Delete from Firebase
       const jobRef = doc(db, 'jobs', jobId)
       await deleteDoc(jobRef)
       
-      // Update local state
       setJobs(jobs.filter(j => j.id !== jobId))
       setShowDeleteConfirm(null)
       alert('Job deleted successfully!')
@@ -2683,17 +2732,20 @@ export default function JobsPage() {
     }
   }
 
-  // ========== SAVE/UPDATE FUNCTION ==========
   const handleSaveJob = useCallback(async () => {
     if (!newJobForm.title || !newJobForm.client || !newJobForm.location) {
       alert('Please fill in all required fields: Title, Client, and Location')
       return
     }
 
+    if (!newJobForm.jobCreatedBy) {
+      alert('Please select the member who is creating this job')
+      return
+    }
+
     try {
       setLoading(true)
       
-      // Get selected employees details
       const selectedEmployeesDetails = employees
         .filter(emp => newJobForm.selectedEmployees.includes(emp.id))
         .map(emp => ({
@@ -2702,12 +2754,10 @@ export default function JobsPage() {
           email: emp.email
         }))
 
-      // Get selected equipment names from equipment collection
       const selectedEquipmentNames = equipment
         .filter(eq => newJobForm.selectedEquipment.includes(eq.id))
         .map(eq => eq.name)
 
-      // Get selected permit names from permits collection
       const selectedPermitNames = permits
         .filter(p => newJobForm.selectedPermits.includes(p.id))
         .map(p => p.name)
@@ -2728,26 +2778,25 @@ export default function JobsPage() {
         slaDeadline: newJobForm.slaDeadline,
         estimatedDuration: newJobForm.estimatedDuration,
         requiredSkills: newJobForm.requiredSkills.split(',').map(s => s.trim()).filter(s => s),
-        equipment: selectedEquipmentNames, // Equipment names
-        permits: selectedPermitNames, // Permit names
+        equipment: selectedEquipmentNames,
+        permits: selectedPermitNames,
         tags: newJobForm.tags.split(',').map(s => s.trim()).filter(s => s),
         specialInstructions: newJobForm.specialInstructions,
         recurring: newJobForm.recurring,
         services: newJobForm.services || [],
-        tasks: newJobForm.tasks || [], // Include tasks
+        tasks: newJobForm.tasks || [],
         updatedAt: new Date().toISOString(),
         assignedTo: selectedEmployeesDetails.map(emp => emp.name),
         assignedEmployees: selectedEmployeesDetails,
+        jobCreatedBy: newJobForm.jobCreatedBy, // 👈 NEW FIELD SAVED TO FIREBASE
         actualCost: 0,
         reminderEnabled: false
       }
 
       if (editingJobId) {
-        // Update existing job in Firebase
         const jobRef = doc(db, 'jobs', editingJobId)
         await updateDoc(jobRef, jobData)
         
-        // Update local state
         setJobs(jobs.map(j =>
           j.id === editingJobId
             ? { ...j, ...jobData, id: editingJobId }
@@ -2755,7 +2804,6 @@ export default function JobsPage() {
         ))
         alert('Job updated successfully!')
       } else {
-        // Create new job in Firebase
         const newJobData = {
           ...jobData,
           status: 'Pending',
@@ -2771,7 +2819,6 @@ export default function JobsPage() {
 
         const docRef = await addDoc(collection(db, 'jobs'), newJobData)
         
-        // Add to local state with Firestore ID
         const newJob: Job = {
           id: docRef.id,
           ...newJobData
@@ -2791,7 +2838,6 @@ export default function JobsPage() {
     }
   }, [newJobForm, jobs, editingJobId, employees, equipment, permits])
 
-  // Calculate statistics
   const stats = useMemo(() => ({
     total: jobs.length,
     pending: jobs.filter(j => j.status === 'Pending').length,
@@ -2803,7 +2849,6 @@ export default function JobsPage() {
     critical: jobs.filter(j => j.priority === 'Critical').length
   }), [jobs])
 
-  // Filter jobs
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
       const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -2860,6 +2905,7 @@ export default function JobsPage() {
       specialInstructions: '',
       recurring: false,
       selectedEmployees: [],
+      jobCreatedBy: '', // 👈 RESET ON NEW JOB
       services: [],
       tasks: [],
       selectedEquipment: [],
@@ -2869,7 +2915,6 @@ export default function JobsPage() {
     setShowNewJobModal(true)
   }
 
-  // Toggle equipment selection
   const toggleEquipmentSelection = (equipmentId: string) => {
     setNewJobForm(prev => {
       if (prev.selectedEquipment.includes(equipmentId)) {
@@ -2886,7 +2931,6 @@ export default function JobsPage() {
     })
   }
 
-  // Toggle permit selection
   const togglePermitSelection = (permitId: string) => {
     setNewJobForm(prev => {
       if (prev.selectedPermits.includes(permitId)) {
@@ -2903,11 +2947,9 @@ export default function JobsPage() {
     })
   }
 
-  // Toggle service selection
   const toggleServiceSelection = (serviceId: string) => {
     setNewJobForm(prev => {
       if (prev.selectedServices.includes(serviceId)) {
-        // Remove service from both selectedServices and services array
         const updatedServices = prev.services?.filter(svc => 
           !services.find(s => s.id === serviceId)?.name.includes(svc.name)
         ) || []
@@ -2918,7 +2960,6 @@ export default function JobsPage() {
           services: updatedServices
         }
       } else {
-        // Add service to both arrays
         const service = services.find(s => s.id === serviceId)
         if (service) {
           const newService: JobService = {
@@ -2941,13 +2982,12 @@ export default function JobsPage() {
     })
   }
 
-  // Add new task
   const handleAddTask = () => {
     const newTask: JobTask = {
       id: Math.random().toString(36).substr(2, 9),
       title: '',
       description: '',
-      duration: 1, // Default 1 hour
+      duration: 1,
       completed: false
     }
     
@@ -2957,7 +2997,6 @@ export default function JobsPage() {
     }))
   }
 
-  // Update task
   const updateTask = (index: number, field: keyof JobTask, value: any) => {
     const updatedTasks = [...(newJobForm.tasks || [])]
     updatedTasks[index] = {
@@ -2971,7 +3010,6 @@ export default function JobsPage() {
     }))
   }
 
-  // Remove task
   const removeTask = (index: number) => {
     const updatedTasks = (newJobForm.tasks || []).filter((_, i) => i !== index)
     setNewJobForm(prev => ({
@@ -2994,14 +3032,12 @@ export default function JobsPage() {
         reminderDate = reminder.toISOString().split('T')[0]
       }
 
-      // Update in Firebase
       const jobRef = doc(db, 'jobs', jobId)
       await updateDoc(jobRef, {
         reminderEnabled: newReminderEnabled,
         reminderDate: reminderDate
       })
 
-      // Update local state
       setJobs(jobs.map(j => {
         if (j.id === jobId) {
           return {
@@ -3020,14 +3056,12 @@ export default function JobsPage() {
 
   const handleUpdateJobStatus = useCallback(async (jobId: string, newStatus: Job['status']) => {
     try {
-      // Update in Firebase
       const jobRef = doc(db, 'jobs', jobId)
       await updateDoc(jobRef, {
         status: newStatus,
         updatedAt: new Date().toISOString()
       })
 
-      // Update local state
       setJobs(jobs.map(j =>
         j.id === jobId
           ? { ...j, status: newStatus, updatedAt: new Date().toISOString() }
@@ -3051,14 +3085,12 @@ export default function JobsPage() {
     if (!selectedJobForExecution) return
     
     try {
-      // Update job status in Firebase
       const jobRef = doc(db, 'jobs', selectedJobForExecution.id)
       await updateDoc(jobRef, {
         status: 'In Progress',
         updatedAt: new Date().toISOString()
       })
 
-      // Add execution log
       const executionLog = {
         timestamp: new Date().toISOString(),
         checklist: executionChecklist,
@@ -3070,7 +3102,6 @@ export default function JobsPage() {
         executionLogs: [...selectedJobForExecution.executionLogs, executionLog]
       })
 
-      // Update local state
       handleUpdateJobStatus(selectedJobForExecution.id, 'In Progress')
       setShowExecutionModal(false)
     } catch (error) {
@@ -3087,7 +3118,6 @@ export default function JobsPage() {
           selectedEmployees: prev.selectedEmployees.filter(id => id !== employeeId)
         }
       } else {
-        // Check if we can add more employees based on teamRequired
         if (prev.selectedEmployees.length >= prev.teamRequired) {
           alert(`Maximum ${prev.teamRequired} employees can be assigned to this job. Please increase team size or remove existing selections.`)
           return prev
@@ -3100,7 +3130,6 @@ export default function JobsPage() {
     })
   }
 
-  // Get selected employee names for display
   const getSelectedEmployeeNames = () => {
     return newJobForm.selectedEmployees.map(empId => {
       const emp = employees.find(e => e.id === empId)
@@ -3108,7 +3137,6 @@ export default function JobsPage() {
     }).filter(name => name)
   }
 
-  // Get selected equipment for display
   const getSelectedEquipmentNames = () => {
     return newJobForm.selectedEquipment.map(eqId => {
       const eq = equipment.find(e => e.id === eqId)
@@ -3116,7 +3144,6 @@ export default function JobsPage() {
     }).filter(name => name)
   }
 
-  // Get selected permits for display
   const getSelectedPermitNames = () => {
     return newJobForm.selectedPermits.map(pId => {
       const p = permits.find(p => p.id === pId)
@@ -3124,12 +3151,17 @@ export default function JobsPage() {
     }).filter(name => name)
   }
 
-  // Get selected services for display
   const getSelectedServiceNames = () => {
     return newJobForm.selectedServices.map(svcId => {
       const svc = services.find(s => s.id === svcId)
       return svc ? svc.name : ''
     }).filter(name => name)
+  }
+
+  // Helper function to get creator name
+  const getCreatorName = (creatorId: string) => {
+    const creator = employees.find(e => e.id === creatorId)
+    return creator ? creator.name : 'Unknown'
   }
 
   return (
@@ -3257,7 +3289,6 @@ export default function JobsPage() {
             <div key={job.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  {/* Clickable Job Title and Details - FIXED */}
                   <Link href={`/admin/jobs/${job.id}`} className="block mb-3 group">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
@@ -3300,11 +3331,17 @@ export default function JobsPage() {
                       </div>
                     </div>
 
+                    {/* 👇 NEW FIELD DISPLAY - Job Created By */}
+                    {job.jobCreatedBy && (
+                      <div className="mt-2 text-xs text-gray-500">
+                        <span className="font-medium">Created by:</span> {getCreatorName(job.jobCreatedBy)}
+                      </div>
+                    )}
+
                     {job.description && (
                       <p className="text-sm text-gray-600 mt-3 line-clamp-2">{job.description}</p>
                     )}
 
-                    {/* Assigned Employees Section */}
                     {job.assignedEmployees && job.assignedEmployees.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         <div className="flex items-center gap-2 mb-2">
@@ -3331,9 +3368,7 @@ export default function JobsPage() {
                     )}
                   </Link>
 
-                  {/* Action Buttons - INCLUDING EDIT, VIEW, DELETE */}
                   <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100">
-                    {/* EDIT BUTTON */}
                     <button
                       onClick={() => handleEditJob(job.id)}
                       className="text-xs px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium flex items-center gap-1"
@@ -3343,7 +3378,6 @@ export default function JobsPage() {
                       Edit
                     </button>
 
-                    {/* VIEW BUTTON */}
                     <button
                       onClick={() => handleViewJob(job.id)}
                       className="text-xs px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium flex items-center gap-1"
@@ -3352,7 +3386,6 @@ export default function JobsPage() {
                       View Details
                     </button>
 
-                    {/* DELETE BUTTON */}
                     <button
                       onClick={() => setShowDeleteConfirm(job.id)}
                       className="text-xs px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium flex items-center gap-1"
@@ -3362,7 +3395,6 @@ export default function JobsPage() {
                       Delete
                     </button>
 
-                    {/* Existing Action Buttons */}
                     {job.status === 'Pending' && (
                       <>
                         <button
@@ -3508,7 +3540,6 @@ export default function JobsPage() {
                     >
                       <option value="">Select a client or lead...</option>
                       
-                      {/* ✅ Clients Section */}
                       <optgroup label="━━━━ Clients ━━━━" className="font-bold text-gray-700">
                         {clients.filter(c => c.type === 'client').map((client) => (
                           <option key={`client-${client.id}`} value={client.id}>
@@ -3517,7 +3548,6 @@ export default function JobsPage() {
                         ))}
                       </optgroup>
                       
-                      {/* ✅ Won & Qualified Leads Section */}
                       <optgroup label="━━━━ Won/Qualified Leads ━━━━" className="font-bold text-gray-700">
                         {clients.filter(c => c.type === 'lead').map((lead) => (
                           <option key={`lead-${lead.id}`} value={lead.id}>
@@ -3547,7 +3577,50 @@ export default function JobsPage() {
                 </div>
               </div>
 
-              {/* Team Assignment Section - DROPDOWN STYLE */}
+              {/* 👇 NEW SECTION - Job Created By */}
+              <div className="space-y-4 border-b pb-6">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-blue-600" />
+                  Job Creator Information
+                </h3>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Job Created By (Select Member) *
+                  </label>
+                  <select
+                    value={newJobForm.jobCreatedBy}
+                    onChange={(e) => setNewJobForm({...newJobForm, jobCreatedBy: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    required
+                  >
+                    <option value="">-- Select a member --</option>
+                    {employees.length > 0 ? (
+                      employees.map(employee => (
+                        <option key={employee.id} value={employee.id}>
+                          {employee.name} - {employee.position} ({employee.department})
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>No employees found</option>
+                    )}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select the person who is creating/requesting this job
+                  </p>
+                </div>
+
+                {newJobForm.jobCreatedBy && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">Selected Creator:</span>{' '}
+                      {employees.find(e => e.id === newJobForm.jobCreatedBy)?.name || ''}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Team Assignment Section */}
               <div className="space-y-4 border-b pb-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -3606,7 +3679,6 @@ export default function JobsPage() {
                   </div>
                 </div>
 
-                {/* Employees Dropdown */}
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-900">Select Employees</label>
                   <div className="relative">
@@ -3777,7 +3849,7 @@ export default function JobsPage() {
                 </div>
               </div>
 
-              {/* Equipment Section - DROPDOWN STYLE */}
+              {/* Equipment Section */}
               <div className="space-y-4 border-b pb-6">
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-blue-600" />
@@ -3844,7 +3916,7 @@ export default function JobsPage() {
                 </div>
               </div>
 
-              {/* Permits Section - DROPDOWN STYLE */}
+              {/* Permits Section */}
               <div className="space-y-4 border-b pb-6">
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   <FileText className="h-5 w-5 text-blue-600" />
@@ -3922,7 +3994,7 @@ export default function JobsPage() {
                 </div>
               </div>
 
-              {/* Services - DROPDOWN STYLE */}
+              {/* Services Section */}
               <div className="space-y-4 border-b pb-6">
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   <ShoppingCart className="h-5 w-5 text-blue-600" />
@@ -3989,7 +4061,6 @@ export default function JobsPage() {
                   <p className="text-xs text-gray-500">Hold Ctrl/Cmd to select multiple services</p>
                 </div>
 
-                {/* Service Details Table */}
                 {(newJobForm.services || []).length > 0 && (
                   <div className="mt-4">
                     <h4 className="font-semibold text-gray-900 mb-2">Service Details</h4>
@@ -4044,7 +4115,7 @@ export default function JobsPage() {
                 )}
               </div>
 
-              {/* Add Tasks Section */}
+              {/* Tasks Section */}
               <div className="space-y-4 border-b pb-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -4163,7 +4234,7 @@ export default function JobsPage() {
               </div>
             </div>
 
-            {/* Action Buttons - Fixed Bottom */}
+            {/* Action Buttons */}
             <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
               <button
                 onClick={() => { setShowNewJobModal(false); setEditingJobId(null) }}
@@ -4241,6 +4312,16 @@ export default function JobsPage() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div><span className="text-gray-600">Client: </span><span className="font-semibold">{selectedJobForExecution.client}</span></div>
                   <div><span className="text-gray-600">Location: </span><span className="font-semibold">{selectedJobForExecution.location}</span></div>
+                  
+                  {/* 👇 NEW FIELD - Show Job Creator in Execution Modal */}
+                  {selectedJobForExecution.jobCreatedBy && (
+                    <div><span className="text-gray-600">Created By: </span>
+                      <span className="font-semibold">
+                        {employees.find(e => e.id === selectedJobForExecution.jobCreatedBy)?.name || 'Unknown'}
+                      </span>
+                    </div>
+                  )}
+                  
                   <div><span className="text-gray-600">Team Size: </span><span className="font-semibold">{selectedJobForExecution.teamRequired}</span></div>
                   <div><span className="text-gray-600">Budget: </span><span className="font-semibold">AED {selectedJobForExecution.budget.toLocaleString()}</span></div>
                 </div>

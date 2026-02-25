@@ -4,7 +4,7 @@
 // import { 
 //   Plus, Trash2, Save, Eye, Percent, DollarSign, 
 //   User, Building2, MapPin, Mail, Phone, ShoppingCart, 
-//   Settings, FileText, ChevronDown, Check, X
+//   Settings, FileText, ChevronDown, Check, X, CreditCard, FileCheck, UserPlus
 // } from 'lucide-react'
 // import { db } from '@/lib/firebase'
 // import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore'
@@ -37,6 +37,15 @@
 //   sku: string;
 // }
 
+// interface Employee {
+//   id: string;
+//   name: string;
+//   email: string;
+//   department: string;
+//   position: string;
+//   status: string;
+// }
+
 // interface Props {
 //   initialData?: any;
 //   onSave?: (data: any) => void;
@@ -65,6 +74,16 @@
 //     products: [],
 //     notes: '',
 //     terms: '',
+//     createdBy: '', // 👈 Store employee ID for dropdown selection
+//     createdByName: '', // 👈 NEW FIELD - Store employee name for Firebase
+//     confirmationLetter: '',
+//     bankDetails: {
+//       accountName: 'HOMEWORK CLEANING SERVICES LLC',
+//       accountNumber: '1234567890123',
+//       bankName: 'Emirates NBD',
+//       swiftCode: 'EBILAEAD',
+//       iban: 'AE180260001234567890123'
+//     },
 //     paymentMethods: ['bank-transfer'],
 //     ...initialData
 //   })
@@ -73,6 +92,7 @@
 //   const [clients, setClients] = useState<Client[]>([])
 //   const [leads, setLeads] = useState<Lead[]>([])
 //   const [services, setServices] = useState<Service[]>([])
+//   const [employees, setEmployees] = useState<Employee[]>([])
 //   const [showCustomClient, setShowCustomClient] = useState(false)
 //   const [customClient, setCustomClient] = useState({
 //     name: '',
@@ -97,7 +117,7 @@
 //       })) as Client[]
 //       setClients(clientsData)
 
-//       // ✅ Fetch ONLY Won and Qualified leads from 'leads' collection
+//       // Fetch ONLY Won and Qualified leads from 'leads' collection
 //       const leadsQuery = query(
 //         collection(db, 'leads'),
 //         where('status', 'in', ['Won', 'Qualified'])
@@ -120,6 +140,15 @@
 //         ...doc.data()
 //       })) as Service[]
 //       setServices(servicesData)
+
+//       // Fetch employees for Created By dropdown
+//       const employeesQuery = query(collection(db, 'employees'), where('status', '==', 'Active'))
+//       const employeesSnapshot = await getDocs(employeesQuery)
+//       const employeesData = employeesSnapshot.docs.map(doc => ({
+//         id: doc.id,
+//         ...doc.data()
+//       })) as Employee[]
+//       setEmployees(employeesData)
 
 //     } catch (error) {
 //       console.error('Error fetching data:', error)
@@ -237,6 +266,16 @@
 //         status: quotationData.status,
 //         notes: quotationData.notes,
 //         terms: quotationData.terms,
+//         createdBy: quotationData.createdByName || '', // 👈 SAVE EMPLOYEE NAME, NOT ID
+//         createdById: quotationData.createdBy || '', // 👀 Optional: ID bhi save karna ho to (but name main field hai)
+//         confirmationLetter: quotationData.confirmationLetter || '',
+//         bankDetails: quotationData.bankDetails || {
+//           accountName: 'HOMEWORK CLEANING SERVICES LLC',
+//           accountNumber: '1234567890123',
+//           bankName: 'Emirates NBD',
+//           swiftCode: 'EBILAEAD',
+//           iban: 'AE180260001234567890123'
+//         },
 //         paymentMethods: quotationData.paymentMethods,
         
 //         // Services and Products
@@ -261,7 +300,7 @@
 //         // Metadata
 //         createdAt: serverTimestamp(),
 //         updatedAt: serverTimestamp(),
-//         createdBy: 'user'
+//         createdByUser: 'user'
 //       }
 
 //       const docRef = await addDoc(collection(db, "quotations"), firebaseData)
@@ -289,6 +328,11 @@
 //   const handleSave = async () => {
 //     if (!formData.client || formData.client === '') {
 //       alert('⚠️ Please select a client before saving.')
+//       return
+//     }
+
+//     if (!formData.createdBy) {
+//       alert('⚠️ Please select the member who created this quotation.')
 //       return
 //     }
 
@@ -418,6 +462,29 @@
 //     setShowCustomClient(false)
 //   }
 
+//   // Handle bank details change
+//   const handleBankDetailChange = (field: string, value: string) => {
+//     setFormData({
+//       ...formData,
+//       bankDetails: {
+//         ...formData.bankDetails,
+//         [field]: value
+//       }
+//     })
+//   }
+
+//   // 👇 Handle employee selection - store both ID and NAME
+//   const handleEmployeeSelect = (employeeId: string) => {
+//     const selectedEmployee = employees.find(e => e.id === employeeId)
+//     if (selectedEmployee) {
+//       setFormData({
+//         ...formData,
+//         createdBy: employeeId,        // Store ID for dropdown selection
+//         createdByName: selectedEmployee.name // Store NAME for Firebase
+//       })
+//     }
+//   }
+
 //   // Count of filtered items
 //   const clientsCount = clients.length
 //   const qualifiedLeadsCount = leads.length
@@ -443,6 +510,52 @@
 //                  </span>
 //                )}
 //              </div>
+//           </div>
+
+//           {/* 👇 NEW SECTION - Created By (Select Member) */}
+//           <div className="space-y-3 border-b border-gray-100 pb-4 mb-2">
+//             <h4 className="text-xs font-bold text-gray-700 flex items-center gap-2">
+//               <UserPlus className="w-4 h-4 text-blue-600" />
+//               Quotation Created By
+//             </h4>
+            
+//             <div>
+//               <label className="text-[10px] uppercase font-bold text-gray-500 ml-1 mb-1 block">
+//                 Select Member *
+//               </label>
+//               <select
+//                 value={formData.createdBy}
+//                 onChange={(e) => handleEmployeeSelect(e.target.value)}
+//                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-black"
+//                 required
+//               >
+//                 <option value="">-- Select a member --</option>
+//                 {employees.length > 0 ? (
+//                   employees.map(employee => (
+//                     <option key={employee.id} value={employee.id}>
+//                       {employee.name} - {employee.position} ({employee.department})
+//                     </option>
+//                   ))
+//                 ) : (
+//                   <option disabled>No employees found</option>
+//                 )}
+//               </select>
+//               <p className="text-[10px] text-gray-400 mt-1">
+//                 Select the person who created this quotation
+//               </p>
+//             </div>
+
+//             {formData.createdByName && (
+//               <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+//                 <p className="text-xs text-gray-700">
+//                   <span className="font-semibold">Selected Creator:</span>{' '}
+//                   {formData.createdByName}
+//                 </p>
+//                 <p className="text-[9px] text-blue-600 mt-1">
+//                   This name will be saved in Firebase
+//                 </p>
+//               </div>
+//             )}
 //           </div>
 
 //           {/* Client Selection Section */}
@@ -791,6 +904,32 @@
 //           </div>
 //         </div>
 
+//         {/* Confirmation Letter Section */}
+//         <div className="bg-white border border-gray-300 rounded p-4 space-y-4 shadow-none">
+//           <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+//             <FileCheck className="w-4 h-4 text-blue-600" />
+//             <h3 className="text-sm font-bold uppercase tracking-tight text-black">
+//               Confirmation Letter
+//             </h3>
+//           </div>
+          
+//           <div className="space-y-2">
+//             <textarea 
+//               rows={4}
+//               placeholder="Enter confirmation letter details here... (Optional)
+              
+// Example:
+// I/We [Client Name] confirm the booking of [Service Name] with Homework Cleaning Services. I agree to the terms and conditions and confirm the quotation amount of [Total Amount] AED."
+//               className="w-full px-3 py-2 border border-gray-300 rounded text-xs focus:outline-none focus:border-black resize-none"
+//               value={formData.confirmationLetter || ''}
+//               onChange={(e) => setFormData({ ...formData, confirmationLetter: e.target.value })}
+//             />
+//             <p className="text-[10px] text-gray-400">
+//               Client confirmation message (optional) - This will appear in the PDF after terms & conditions
+//             </p>
+//           </div>
+//         </div>
+
 //         {/* Notes & Terms */}
 //         <div className="bg-white border border-gray-300 rounded p-4 space-y-4 shadow-none">
 //           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -816,10 +955,97 @@
 //             </div>
 //           </div>
 //         </div>
+
+//         {/* Bank Account Details Section */}
+//         <div className="bg-white border border-gray-300 rounded p-4 space-y-4 shadow-none">
+//           <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+//             <CreditCard className="w-4 h-4 text-green-600" />
+//             <h3 className="text-sm font-bold uppercase tracking-tight text-black">
+//               Bank Account Details (AED)
+//             </h3>
+//           </div>
+          
+//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//             <div className="space-y-1">
+//               <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Account Name</label>
+//               <input
+//                 type="text"
+//                 value={formData.bankDetails?.accountName || ''}
+//                 onChange={(e) => handleBankDetailChange('accountName', e.target.value)}
+//                 className="w-full px-3 py-2 border border-gray-300 rounded text-xs focus:outline-none focus:border-black"
+//                 placeholder="HOMEWORK CLEANING SERVICES LLC"
+//               />
+//             </div>
+            
+//             <div className="space-y-1">
+//               <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Account Number</label>
+//               <input
+//                 type="text"
+//                 value={formData.bankDetails?.accountNumber || ''}
+//                 onChange={(e) => handleBankDetailChange('accountNumber', e.target.value)}
+//                 className="w-full px-3 py-2 border border-gray-300 rounded text-xs focus:outline-none focus:border-black"
+//                 placeholder="1234567890123"
+//               />
+//             </div>
+            
+//             <div className="space-y-1">
+//               <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">Bank Name</label>
+//               <input
+//                 type="text"
+//                 value={formData.bankDetails?.bankName || ''}
+//                 onChange={(e) => handleBankDetailChange('bankName', e.target.value)}
+//                 className="w-full px-3 py-2 border border-gray-300 rounded text-xs focus:outline-none focus:border-black"
+//                 placeholder="Emirates NBD"
+//               />
+//             </div>
+            
+//             <div className="space-y-1">
+//               <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">SWIFT Code</label>
+//               <input
+//                 type="text"
+//                 value={formData.bankDetails?.swiftCode || ''}
+//                 onChange={(e) => handleBankDetailChange('swiftCode', e.target.value)}
+//                 className="w-full px-3 py-2 border border-gray-300 rounded text-xs focus:outline-none focus:border-black"
+//                 placeholder="EBILAEAD"
+//               />
+//             </div>
+            
+//             <div className="space-y-1 md:col-span-2">
+//               <label className="text-[10px] uppercase font-bold text-gray-500 ml-1">IBAN Number</label>
+//               <input
+//                 type="text"
+//                 value={formData.bankDetails?.iban || ''}
+//                 onChange={(e) => handleBankDetailChange('iban', e.target.value)}
+//                 className="w-full px-3 py-2 border border-gray-300 rounded text-xs focus:outline-none focus:border-black"
+//                 placeholder="AE180260001234567890123"
+//               />
+//             </div>
+//           </div>
+          
+//           <p className="text-[10px] text-gray-400 italic">
+//             These bank details will appear in the PDF quotation
+//           </p>
+//         </div>
 //       </div>
 
 //       {/* RIGHT: SUMMARY & ACTIONS */}
 //       <div className="w-full lg:w-[320px] space-y-4">
+//         {/* Created By Summary Card */}
+//         {formData.createdByName && (
+//           <div className="bg-blue-50 border border-blue-200 rounded p-3">
+//             <div className="flex items-center gap-2 mb-1">
+//               <UserPlus className="w-3 h-3 text-blue-600" />
+//               <span className="text-[10px] uppercase font-bold text-blue-700">Quotation Creator</span>
+//             </div>
+//             <p className="text-xs font-bold text-blue-800">
+//               {formData.createdByName}
+//             </p>
+//             <p className="text-[9px] text-blue-600 mt-1">
+//               {employees.find(e => e.id === formData.createdBy)?.position || ''} • {employees.find(e => e.id === formData.createdBy)?.department || ''}
+//             </p>
+//           </div>
+//         )}
+
 //         {/* TOTALS BOX */}
 //         <div className="bg-black text-white rounded p-1 shadow-none">
 //           <div className="bg-white border border-black rounded p-4 space-y-4">
@@ -936,8 +1162,6 @@
 //   )
 // }
 
-
-
 // new code
 'use client'
 
@@ -945,10 +1169,10 @@ import { useState, useMemo, useEffect } from 'react'
 import { 
   Plus, Trash2, Save, Eye, Percent, DollarSign, 
   User, Building2, MapPin, Mail, Phone, ShoppingCart, 
-  Settings, FileText, ChevronDown, Check, X, CreditCard, FileCheck
+  Settings, FileText, ChevronDown, Check, X, CreditCard, FileCheck, UserPlus
 } from 'lucide-react'
 import { db } from '@/lib/firebase'
-import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, doc, serverTimestamp, getDocs, query, where } from 'firebase/firestore'
 
 interface Client {
   id: string;
@@ -978,6 +1202,15 @@ interface Service {
   sku: string;
 }
 
+interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  department: string;
+  position: string;
+  status: string;
+}
+
 interface Props {
   initialData?: any;
   onSave?: (data: any) => void;
@@ -985,6 +1218,10 @@ interface Props {
 }
 
 export default function QuotationBuilder({ initialData, onSave, onCancel }: Props) {
+  // 👇 NEW STATES FOR EDIT MODE
+  const [isEditing, setIsEditing] = useState(false);
+  const [quotationId, setQuotationId] = useState<string | null>(null);
+
   const [formData, setFormData] = useState<any>({
     quoteNumber: `#QT-${Date.now().toString().slice(-4)}-${new Date().getFullYear()}`,
     clientId: '',
@@ -1006,22 +1243,24 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
     products: [],
     notes: '',
     terms: '',
-    confirmationLetter: '', // New field
-    bankDetails: { // New field
+    createdBy: '', // Store employee ID for dropdown selection
+    createdByName: '', // Store employee name for Firebase
+    confirmationLetter: '',
+    bankDetails: {
       accountName: 'HOMEWORK CLEANING SERVICES LLC',
       accountNumber: '1234567890123',
       bankName: 'Emirates NBD',
       swiftCode: 'EBILAEAD',
       iban: 'AE180260001234567890123'
     },
-    paymentMethods: ['bank-transfer'],
-    ...initialData
+    paymentMethods: ['bank-transfer']
   })
 
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [clients, setClients] = useState<Client[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
   const [services, setServices] = useState<Service[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
   const [showCustomClient, setShowCustomClient] = useState(false)
   const [customClient, setCustomClient] = useState({
     name: '',
@@ -1030,6 +1269,65 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
     phone: '',
     location: ''
   })
+
+  // 👇 NEW EFFECT - Handle initialData for editing
+  useEffect(() => {
+    if (initialData && initialData.id) {
+      setIsEditing(true);
+      setQuotationId(initialData.id);
+      
+      // Find the employee name if createdBy is ID
+      let createdByName = initialData.createdBy || '';
+      let createdById = '';
+      
+      if (initialData.createdById) {
+        createdById = initialData.createdById;
+      } else {
+        // Try to find employee by name
+        const employee = employees.find(e => e.name === initialData.createdBy);
+        if (employee) {
+          createdById = employee.id;
+        }
+      }
+
+      setFormData({
+        quoteNumber: initialData.quoteNumber || formData.quoteNumber,
+        clientId: initialData.clientId || '',
+        client: initialData.client || '',
+        company: initialData.company || '',
+        email: initialData.email || '',
+        phone: initialData.phone || '',
+        location: initialData.location || '',
+        date: initialData.date || new Date().toISOString().split('T')[0],
+        validUntil: initialData.validUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        dueDate: initialData.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        currency: initialData.currency || 'AED',
+        taxRate: initialData.taxRate || 5,
+        discount: initialData.discount || 0,
+        discountType: initialData.discountType || 'percentage',
+        template: initialData.template || 'professional',
+        status: initialData.status || 'Draft',
+        services: initialData.services || [],
+        products: initialData.products || [],
+        notes: initialData.notes || '',
+        terms: initialData.terms || '',
+        createdBy: createdById, // Store ID for dropdown
+        createdByName: createdByName, // Store name for display
+        confirmationLetter: initialData.confirmationLetter || '',
+        bankDetails: initialData.bankDetails || {
+          accountName: 'HOMEWORK CLEANING SERVICES LLC',
+          accountNumber: '1234567890123',
+          bankName: 'Emirates NBD',
+          swiftCode: 'EBILAEAD',
+          iban: 'AE180260001234567890123'
+        },
+        paymentMethods: initialData.paymentMethods || ['bank-transfer']
+      });
+    } else {
+      setIsEditing(false);
+      setQuotationId(null);
+    }
+  }, [initialData, employees]);
 
   // Fetch real data from Firebase
   useEffect(() => {
@@ -1069,6 +1367,15 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
         ...doc.data()
       })) as Service[]
       setServices(servicesData)
+
+      // Fetch employees for Created By dropdown
+      const employeesQuery = query(collection(db, 'employees'), where('status', '==', 'Active'))
+      const employeesSnapshot = await getDocs(employeesQuery)
+      const employeesData = employeesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Employee[]
+      setEmployees(employeesData)
 
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -1133,6 +1440,7 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
     };
   }, [formData])
 
+  // 👇 UPDATED saveToFirebase function with edit support
   const saveToFirebase = async (quotationData: any) => {
     setSaveSuccess(false)
     
@@ -1186,8 +1494,10 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
         status: quotationData.status,
         notes: quotationData.notes,
         terms: quotationData.terms,
-        confirmationLetter: quotationData.confirmationLetter || '', // New field
-        bankDetails: quotationData.bankDetails || { // New field
+        createdBy: quotationData.createdByName || '', // Save employee name
+        createdById: quotationData.createdBy || '', // Save employee ID for future edits
+        confirmationLetter: quotationData.confirmationLetter || '',
+        bankDetails: quotationData.bankDetails || {
           accountName: 'HOMEWORK CLEANING SERVICES LLC',
           accountNumber: '1234567890123',
           bankName: 'Emirates NBD',
@@ -1216,14 +1526,33 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
         })),
         
         // Metadata
-        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        createdBy: 'user'
+        createdByUser: 'user'
       }
 
-      const docRef = await addDoc(collection(db, "quotations"), firebaseData)
+      let docRef;
       
-      console.log("Quotation saved with ID: ", docRef.id)
+      // 👇 CHECK IF EDITING OR NEW
+      if (isEditing && quotationId) {
+        // UPDATE existing quotation
+        const quotationDoc = doc(db, "quotations", quotationId);
+        await updateDoc(quotationDoc, {
+          ...firebaseData,
+          updatedAt: serverTimestamp()
+        });
+        docRef = { id: quotationId };
+        console.log("Quotation updated with ID: ", quotationId);
+        alert(`✅ Quotation updated successfully`);
+      } else {
+        // CREATE new quotation
+        const newData = {
+          ...firebaseData,
+          createdAt: serverTimestamp(),
+        };
+        docRef = await addDoc(collection(db, "quotations"), newData);
+        console.log("Quotation saved with ID: ", docRef.id);
+        alert(`✅ Quotation saved successfully`);
+      }
       
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
@@ -1231,8 +1560,6 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
       if (onSave) {
         onSave({ ...firebaseData, firebaseId: docRef.id })
       }
-      
-      alert(`✅ Quotation saved successfully`)
       
       return docRef.id
       
@@ -1246,6 +1573,11 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
   const handleSave = async () => {
     if (!formData.client || formData.client === '') {
       alert('⚠️ Please select a client before saving.')
+      return
+    }
+
+    if (!formData.createdBy) {
+      alert('⚠️ Please select the member who created this quotation.')
       return
     }
 
@@ -1386,6 +1718,18 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
     })
   }
 
+  // Handle employee selection - store both ID and NAME
+  const handleEmployeeSelect = (employeeId: string) => {
+    const selectedEmployee = employees.find(e => e.id === employeeId)
+    if (selectedEmployee) {
+      setFormData({
+        ...formData,
+        createdBy: employeeId,        // Store ID for dropdown selection
+        createdByName: selectedEmployee.name // Store NAME for Firebase
+      })
+    }
+  }
+
   // Count of filtered items
   const clientsCount = clients.length
   const qualifiedLeadsCount = leads.length
@@ -1399,18 +1743,65 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
           <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-3">
              <h3 className="text-sm font-bold uppercase tracking-tight text-black flex items-center gap-2">
                 <FileText className="w-4 h-4" />
-                Quotation Information
+                {isEditing ? 'Edit Quotation' : 'Quotation Information'}
              </h3>
              <div className="flex items-center gap-2">
                <span className="text-[11px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
                   {formData.quoteNumber}
+                  {isEditing && <span className="ml-1 text-blue-600">(Editing)</span>}
                </span>
                {saveSuccess && (
                  <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">
-                    ✓ Saved 
+                    ✓ {isEditing ? 'Updated' : 'Saved'} 
                  </span>
                )}
              </div>
+          </div>
+
+          {/* Created By Section */}
+          <div className="space-y-3 border-b border-gray-100 pb-4 mb-2">
+            <h4 className="text-xs font-bold text-gray-700 flex items-center gap-2">
+              <UserPlus className="w-4 h-4 text-blue-600" />
+              Quotation Created By
+            </h4>
+            
+            <div>
+              <label className="text-[10px] uppercase font-bold text-gray-500 ml-1 mb-1 block">
+                Select Member *
+              </label>
+              <select
+                value={formData.createdBy}
+                onChange={(e) => handleEmployeeSelect(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-black"
+                required
+              >
+                <option value="">-- Select a member --</option>
+                {employees.length > 0 ? (
+                  employees.map(employee => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.name} - {employee.position} ({employee.department})
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>No employees found</option>
+                )}
+              </select>
+              <p className="text-[10px] text-gray-400 mt-1">
+                Select the person who created this quotation
+              </p>
+            </div>
+
+            {formData.createdByName && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                <p className="text-xs text-gray-700">
+                  <span className="font-semibold">Selected Creator:</span>{' '}
+                  {formData.createdByName}
+                </p>
+                <p className="text-[9px] text-blue-600 mt-1">
+                  This name will be saved in Firebase
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Client Selection Section */}
@@ -1759,7 +2150,7 @@ export default function QuotationBuilder({ initialData, onSave, onCancel }: Prop
           </div>
         </div>
 
-        {/* Confirmation Letter Section - NEW */}
+        {/* Confirmation Letter Section */}
         <div className="bg-white border border-gray-300 rounded p-4 space-y-4 shadow-none">
           <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
             <FileCheck className="w-4 h-4 text-blue-600" />
@@ -1811,7 +2202,7 @@ I/We [Client Name] confirm the booking of [Service Name] with Homework Cleaning 
           </div>
         </div>
 
-        {/* Bank Account Details Section - NEW */}
+        {/* Bank Account Details Section */}
         <div className="bg-white border border-gray-300 rounded p-4 space-y-4 shadow-none">
           <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
             <CreditCard className="w-4 h-4 text-green-600" />
@@ -1885,6 +2276,22 @@ I/We [Client Name] confirm the booking of [Service Name] with Homework Cleaning 
 
       {/* RIGHT: SUMMARY & ACTIONS */}
       <div className="w-full lg:w-[320px] space-y-4">
+        {/* Created By Summary Card */}
+        {formData.createdByName && (
+          <div className="bg-blue-50 border border-blue-200 rounded p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <UserPlus className="w-3 h-3 text-blue-600" />
+              <span className="text-[10px] uppercase font-bold text-blue-700">Quotation Creator</span>
+            </div>
+            <p className="text-xs font-bold text-blue-800">
+              {formData.createdByName}
+            </p>
+            <p className="text-[9px] text-blue-600 mt-1">
+              {employees.find(e => e.id === formData.createdBy)?.position || ''} • {employees.find(e => e.id === formData.createdBy)?.department || ''}
+            </p>
+          </div>
+        )}
+
         {/* TOTALS BOX */}
         <div className="bg-black text-white rounded p-1 shadow-none">
           <div className="bg-white border border-black rounded p-4 space-y-4">
@@ -1966,7 +2373,7 @@ I/We [Client Name] confirm the booking of [Service Name] with Homework Cleaning 
             className="w-full flex items-center justify-center gap-2 py-3 bg-black text-white rounded text-sm font-bold uppercase tracking-widest transition-all shadow-lg text-center hover:bg-gray-800 shadow-black/10"
            >
               <Save className="w-4 h-4" />
-              Save Quotation
+              {isEditing ? 'Update Quotation' : 'Save Quotation'}
            </button>
            
            <div className="grid grid-cols-2 gap-2">
@@ -1988,7 +2395,7 @@ I/We [Client Name] confirm the booking of [Service Name] with Homework Cleaning 
            {saveSuccess && (
              <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-center">
                <p className="text-[10px] font-bold text-green-700">
-                 ✓ Quotation saved successfully
+                 ✓ Quotation {isEditing ? 'updated' : 'saved'} successfully
                </p>
                <p className="text-[9px] text-green-600 mt-1">
                  All data including calculations saved successfully

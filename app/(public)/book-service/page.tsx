@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, JSXElementConstructor, ReactElement, ReactNode, ReactPortal } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,12 +18,10 @@ import {
   MapPin,
   ClipboardList,
   Star,
-  X,
-  Check,
-  PhoneCall,
+  Send,
 } from "lucide-react";
 import { collection, addDoc, serverTimestamp, getDocs } from "firebase/firestore";
-import { db } from '@/lib/firebase'; // Import from centralized config
+import { db } from '@/lib/firebase';
 
 // Firebase service type
 interface FirebaseService {
@@ -116,9 +114,9 @@ export default function BookService() {
     message: "",
   });
 
-  // Original hardcoded services (unchanged)
+  // Hardcoded services (if any)
   const serviceCategories: any[] = [
-   
+    // Add your hardcoded services here if needed
   ];
 
   // Fetch services from Firebase on component mount
@@ -167,7 +165,23 @@ export default function BookService() {
 
         console.log('📝 Submitting booking to Firebase...', formData);
 
-        // Save to Firebase first and wait for confirmation
+        // Get service name
+        let selectedServiceName = firebaseServices.find(s => s.id === formData.service)?.name;
+        
+        if (!selectedServiceName) {
+          // Check hardcoded services
+          for (const category of serviceCategories) {
+            const service = category.options.find((opt: { id: string; }) => opt.id === formData.service);
+            if (service) {
+              selectedServiceName = service.label;
+              break;
+            }
+          }
+        }
+        
+        selectedServiceName = selectedServiceName || 'Service';
+
+        // Save to Firebase first
         const result = await saveBookingToFirebase(formData);
 
         console.log('✅ Firebase save result:', result);
@@ -177,26 +191,10 @@ export default function BookService() {
           throw new Error(result.error || 'Failed to save booking to database');
         }
 
-        // Send email notification (await to ensure it completes)
+        // ============= SEND REAL EMAIL TO SALES TEAM =============
+        console.log('📧 Sending real email to sales team...');
+
         try {
-          // Get service name from either Firebase services or hardcoded services
-          let selectedServiceName = firebaseServices.find(s => s.id === formData.service)?.name;
-          
-          if (!selectedServiceName) {
-            // Check hardcoded services
-            for (const category of serviceCategories) {
-              const service = category.options.find((opt: { id: string; }) => opt.id === formData.service);
-              if (service) {
-                selectedServiceName = service.label;
-                break;
-              }
-            }
-          }
-          
-          selectedServiceName = selectedServiceName || 'Service';
-          
-          console.log('📧 Sending email notification...');
-          
           const emailResponse = await fetch('/api/send-booking-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -217,15 +215,23 @@ export default function BookService() {
           });
           
           const emailResult = await emailResponse.json();
-          console.log('📧 Email result:', emailResult);
+          
+          if (emailResult.success) {
+            console.log('✅ Real email sent successfully to:', emailResult.to || 'Homeworkuae2026@gmail.com');
+            console.log('📧 Message ID:', emailResult.messageId || 'Check your inbox');
+          } else {
+            console.error('❌ Email sending failed:', emailResult.error);
+          }
+          
         } catch (emailError) {
-          console.error('❌ Email notification failed:', emailError);
+          console.error('❌ Email notification error:', emailError);
           // Continue even if email fails - booking is already saved
         }
+        // ========================================================
 
         console.log('✅ Booking completed successfully! Redirecting...');
 
-        // Only redirect after booking is confirmed saved
+        // Redirect to thank you page
         router.push('/booking-thank-you');
         
       } catch (error: any) {
@@ -247,7 +253,7 @@ export default function BookService() {
     }));
   };
 
-  // Get service name from ID - Updated to check both hardcoded and Firebase services
+  // Get service name from ID
   const getServiceName = (id: string) => {
     // First check hardcoded services
     for (const category of serviceCategories) {
@@ -279,7 +285,6 @@ export default function BookService() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
-
       {/* Hero Header */}
       <section className="relative py-24 bg-slate-950 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-40">
@@ -445,7 +450,7 @@ export default function BookService() {
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleChange}
-                                placeholder="+971 -- --- ----"
+                                placeholder="+971 XX XXX XXXX"
                                 required
                                 className="w-full pl-14 pr-6 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all font-bold text-sm shadow-inner"
                               />
@@ -504,10 +509,10 @@ export default function BookService() {
                             >
                               <option value="">Choose Service...</option>
                               
-                              {/* Hardcoded Services (unchanged) */}
+                              {/* Hardcoded Services */}
                               {serviceCategories.map((cat, idx) => (
                                 <optgroup key={`hardcoded-${idx}`} label={cat.group}>
-                                  {cat.options.map((opt: { id: string | number | readonly string[] | undefined; label: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
+                                  {cat.options.map((opt: any) => (
                                     <option key={`hardcoded-${opt.id}`} value={opt.id}>
                                       {opt.label}
                                     </option>
@@ -687,8 +692,17 @@ export default function BookService() {
                         </>
                       ) : (
                         <>
-                          {step === totalSteps ? "Complete Booking" : "Continue"}
-                          <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                          {step === totalSteps ? (
+                            <>
+                              Complete Booking
+                              <Send className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            </>
+                          ) : (
+                            <>
+                              Continue
+                              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            </>
+                          )}
                         </>
                       )}
                     </button>
@@ -742,4 +756,3 @@ export default function BookService() {
     </div>
   );
 }
-
